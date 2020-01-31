@@ -26,6 +26,7 @@ def finding_classes(base_path):
     as classes
     """
     classes = os.listdir(base_path)
+    print(classes)
     return classes
 
 def finding_channels(   classes, base_path, 
@@ -58,9 +59,8 @@ def number_of_files_per_class(classes, base_path, existing_channels,
     """
     results = dict()
     for cl in classes:
-        cl_path = os.path.join(base_path, cl, "*" + file_extension)
-        
-        cl_files = glob.glob(cl_path)
+        cl_path = os.path.join(base_path, cl, "*" + file_extension) 
+        cl_files = glob.glob(cl_path) 
         
         results[cl] = int(float(len(cl_files))/float(len(existing_channels)))
     return results
@@ -74,18 +74,19 @@ def input_dataframe_generator(classes_dict):
     ["file"  ,"label", "class"]
     """
     label = 0
-    df = pd.DataFrame(columns= ["file"  ,"label", "class"] )
+    df = pd.DataFrame(columns= ["file"  ,"label", "class", "prediction"] )
     for cl in classes_dict:
-        df_dummy = pd.DataFrame(columns= ["file" ,"label", "class"]  )
-        df_dummy["file"] = range(0, classes_dict[cl])
+        df_dummy = pd.DataFrame(columns= ["file" ,"label", "class", "prediction"]  )
+        df_dummy["file"] = range(1, classes_dict[cl])
         df_dummy["label"] = label
         df_dummy["class"] = cl
+        df_dummy["prediction"] = -1
         df = df.append(df_dummy, ignore_index=True)
         label = label + 1
     return df
 
 def train_validation_test_split(df, validation_size= 0.2 , test_size = 0.3 ,
-                randomize = True):
+                randomize = False):
     """
     This functions gets the dataframe and creates train, validation and test 
     split. It gives back the dataframe with columns:
@@ -108,7 +109,7 @@ def train_validation_test_split(df, validation_size= 0.2 , test_size = 0.3 ,
 def calculate_statistics(   base_path, 
                             df , 
                             channels ,
-                            reshape_size = 32):
+                            reshape_size ):
     """
     This functions creates the trainloader and calulates the mean
     and standard deviation for the training set
@@ -117,7 +118,7 @@ def calculate_statistics(   base_path,
                     reshape_size )
 
     trainloader = DataLoader(train_generator, batch_size=128, \
-        shuffle=True, num_workers=4)
+        shuffle=False, num_workers=4)
 
     mean = 0.
     std = 0.
@@ -151,10 +152,11 @@ class Dataset_Generator(Dataset):
             transform (callable, optional): Optional transform to be applied
                 on a sample.
         """
-        self.df = df.copy()
+        self.df = df.copy().reset_index(drop = True)
         
         # just using the set of interest
-        self.df = self.df[self.df["set"]==set_type].reset_index(drop = True) 
+        if set_type is not None:
+            self.df = self.df[self.df["set"]==set_type].reset_index(drop = True) 
         
         self.base_path = base_path
         self.reshape_size = reshape_size
@@ -168,10 +170,10 @@ class Dataset_Generator(Dataset):
     def __getitem__(self, idx):
         
         if torch.is_tensor(idx):
-            idx = idx.tolist()
-        
+            idx = idx.tolist() 
+
         image = np.zeros((len(self.channels), self.reshape_size, self.reshape_size))
-        
+        #print(("idx", idx))
         for ch in range(0,len(self.channels) ): 
             img_name = os.path.join(self.base_path,self.df.loc[idx,"class"], \
                                    str(self.df.loc[idx,"file"])  +"_" + \
@@ -189,15 +191,14 @@ class Dataset_Generator(Dataset):
         
         label = np.array([label]) 
         
-        sample = {'image': image , 'label': torch.from_numpy(label) }
+        sample = {'image': image , 'label': torch.from_numpy(label) , "idx":idx }
         
         return sample
 
 
 class DataLoaderGenerator():
-    def __init__(self, base_path, reshape_size,batch_size, validation_split, test_split):
-        self.base_path = base_path
-        self.reshape_size = reshape_size
+    def __init__(self, base_path, batch_size, validation_split, test_split):
+        self.base_path = base_path 
         self.batch_size = batch_size
         self.validation_split = validation_split
         self.test_split = test_split
@@ -215,7 +216,7 @@ class DataLoaderGenerator():
         self.df = train_validation_test_split(  self.df, 
                                                 self.validation_split , 
                                                 self.test_split ,
-                                                randomize = True)
+                                                randomize = False)
 
 
     def calculate_statistics(self):
@@ -252,12 +253,11 @@ class DataLoaderGenerator():
         std /= nb_samples
         self.mean = mean
         self.std = std
-        
 
-    def data_loader_generator(self):
-        self.data_frame_creator()
+    def data_loader_generator(self, reshape_size):
+
+        self.reshape_size = reshape_size
         self.calculate_statistics()
-
                                         
         self.train_generator = Dataset_Generator(self.base_path, 
                                             self.df , 
@@ -272,26 +272,15 @@ class DataLoaderGenerator():
                                 shuffle=False, 
                                 num_workers=4)
 
-        self.validtion_generator = Dataset_Generator(self.base_path, 
+        self.validation_generator = Dataset_Generator(self.base_path, 
                                             self.df , 
                                             self.existing_channels  ,  
-                                            "validation" , 
+                                            None , 
                                             self.reshape_size , 
                                             self.mean, 
                                             self.std )
-        self.validtionloader = DataLoader(self.validtion_generator, 
-                                    batch_size=self.batch_size, \
-                                    shuffle=False, 
-                                    num_workers=1)
-
-        self.test_generator = Dataset_Generator(self.base_path, 
-                                            self.df , 
-                                            self.existing_channels  ,  
-                                            "test" , 
-                                            self.reshape_size , 
-                                            self.mean, 
-                                            self.std )
-        self.testloader = DataLoader(self.test_generator, 
-                                batch_size=self.batch_size, \
+                                            
+        self.validationloader = DataLoader(self.validation_generator, 
+                                batch_size=1, \
                                 shuffle=False, 
                                 num_workers=1)
