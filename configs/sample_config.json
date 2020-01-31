@@ -1,0 +1,21 @@
+{
+    "base_path": "/home/ali/code/sample-data/data/",
+    "batch_size": 64,
+    "validation_split": 0.1,
+    "test_split": 0.1,
+    "tensorboard_path": "/home/ali/code/sample-data/data/runs",
+    "file_extension": ".tiff",
+    "previous_model_address": null,
+    "model_name": "ShallowNet",
+    "num_epochs": 20,
+    "device": "cpu",
+    "optimization_parameters": {
+      "lr": 0.001,
+      "weight_decay": 0.1
+    },
+    "optimization_method": "adam",
+    "loss_function": "nll_loss",
+    "metrics_of_interest": ["accuracy", "dice"]
+  }
+            
+  
