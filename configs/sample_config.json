@@ -1,13 +1,13 @@
 {
-    "base_path": "/home/ali/code/sample-data/data/",
+    "base_path": "/home/ali/code/mnist/",
     "batch_size": 64,
     "validation_split": 0.1,
     "test_split": 0.1,
-    "tensorboard_path": "/home/ali/code/sample-data/data/runs",
-    "file_extension": ".tiff",
+    "tensorboard_path": "/home/ali/code/sample-data/tensorboard/mnist",
+    "file_extension": ".jpg",
     "previous_model_address": null,
     "model_name": "ShallowNet",
-    "num_epochs": 20,
+    "num_epochs": 15,
     "device": "cpu",
     "optimization_parameters": {
       "lr": 0.001,

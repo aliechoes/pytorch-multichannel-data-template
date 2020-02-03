@@ -30,7 +30,7 @@ def finding_classes(base_path):
     return classes
 
 def finding_channels(   classes, base_path, 
-                        file_prefix = "" ,file_extension = ".tiff"):
+                        file_prefix = "" ,file_extension = ".jpg"):
     """
     this function finds the existing channels in the folder and returns
     a list of them
@@ -49,7 +49,7 @@ def finding_channels(   classes, base_path,
         
         
 def number_of_files_per_class(classes, base_path, existing_channels,
-                        file_prefix = "" ,file_extension = ".tiff" ):
+                        file_prefix = "" ,file_extension = ".jpg" ):
     """
     this function finds the number of files in each folder. it is important
     as with this, we can call all the files. In Amnis, each experiment
@@ -114,10 +114,10 @@ def calculate_statistics(   base_path,
     This functions creates the trainloader and calulates the mean
     and standard deviation for the training set
     """
-    train_generator = Dataset_Generator( base_path, df , channels , "train" , 
+    train_dataset = Dataset_Generator( base_path, df , channels , "train" , 
                     reshape_size )
 
-    trainloader = DataLoader(train_generator, batch_size=128, \
+    trainloader = DataLoader(train_dataset, batch_size=128, \
         shuffle=False, num_workers=4)
 
     mean = 0.
@@ -132,7 +132,7 @@ def calculate_statistics(   base_path,
         std += data.std(2).sum(0)
         nb_samples += batch_samples
         
-    train_generator = None
+    train_dataset = None
     trainloader = None
 
     mean /= nb_samples
@@ -177,7 +177,7 @@ class Dataset_Generator(Dataset):
         for ch in range(0,len(self.channels) ): 
             img_name = os.path.join(self.base_path,self.df.loc[idx,"class"], \
                                    str(self.df.loc[idx,"file"])  +"_" + \
-                                       self.channels[ch] + ".tiff")
+                                       self.channels[ch] + ".jpg")
             image_dummy = imread(img_name)
             image_dummy = resize(image_dummy , (self.reshape_size, self.reshape_size) )  
             image[ch,:,:] = image_dummy
@@ -224,13 +224,13 @@ class DataLoaderGenerator():
         This functions creates the trainloader and calulates the mean
         and standard deviation for the training set
         """
-        train_generator = Dataset_Generator(    self.base_path, 
+        train_dataset = Dataset_Generator(    self.base_path, 
                                                 self.df , 
                                                 self.existing_channels , 
                                                 "train" , 
                                                 self.reshape_size )
 
-        trainloader = DataLoader(   train_generator, \
+        trainloader = DataLoader(   train_dataset, \
                                     batch_size=self.batch_size, \
                                     shuffle=False, num_workers=4)
 
@@ -246,7 +246,7 @@ class DataLoaderGenerator():
             std += data.std(2).sum(0)
             nb_samples += batch_samples
             
-        train_generator = None
+        train_dataset = None
         trainloader = None
 
         mean /= nb_samples
@@ -259,7 +259,7 @@ class DataLoaderGenerator():
         self.reshape_size = reshape_size
         self.calculate_statistics()
                                         
-        self.train_generator = Dataset_Generator(self.base_path, 
+        self.train_dataset = Dataset_Generator(self.base_path, 
                                             self.df , 
                                             self.existing_channels  ,  
                                             "train" , 
@@ -267,12 +267,12 @@ class DataLoaderGenerator():
                                             self.mean, 
                                             self.std )
 
-        self.trainloader = DataLoader(self.train_generator, 
+        self.trainloader = DataLoader(self.train_dataset, 
                                 batch_size=self.batch_size, \
                                 shuffle=False, 
                                 num_workers=4)
 
-        self.validation_generator = Dataset_Generator(self.base_path, 
+        self.validation_dataset = Dataset_Generator(self.base_path, 
                                             self.df , 
                                             self.existing_channels  ,  
                                             None , 
@@ -280,7 +280,7 @@ class DataLoaderGenerator():
                                             self.mean, 
                                             self.std )
                                             
-        self.validationloader = DataLoader(self.validation_generator, 
+        self.validationloader = DataLoader(self.validation_dataset, 
                                 batch_size=1, \
                                 shuffle=False, 
                                 num_workers=1)

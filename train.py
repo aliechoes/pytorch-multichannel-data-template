@@ -3,13 +3,15 @@ import torchvision
 from machine_learning.metrics import metric_history
 import time
 
+
 def train(  model,   
             data_loader_generator, 
             optimizer,
             criterion,
             metric_dataframe ,    
             metrics_of_interest,
-            num_epochs = 2,
+            num_epochs,
+            writer, 
             device = 'cpu'):
     
 
@@ -40,8 +42,13 @@ def train(  model,
             # print loss every 5 minibatches
             if i % 5 == 4:
                 print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 5))
-                running_loss = 0.0
                 
+                writer.add_loss('training loss',
+                            running_loss / 5,
+                            epoch * len(data_loader_generator.trainloader) + i)
+                running_loss = 0.0
+        
+
         with torch.no_grad():  
             
             for i, data in enumerate(data_loader_generator.validationloader, 0): 
@@ -64,5 +71,9 @@ def train(  model,
                             epoch, 
                             metrics_of_interest )
 
+            writer.add_metrics(metric_dataframe,metrics_of_interest ,epoch)
+
     print('Finished Training')
+    writer.add_graph(model, data_loader_generator)
+    writer.add_embedding( model, data_loader_generator)
     return  model, metric_dataframe 

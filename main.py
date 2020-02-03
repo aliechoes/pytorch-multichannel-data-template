@@ -1,5 +1,6 @@
 import torch
 import torchvision
+from torch.utils.tensorboard import SummaryWriter
 import argparse
 import sys
 import os
@@ -16,10 +17,11 @@ import imageio
 import json
 import numpy as np 
 import pandas as pd
-from data_loader.data_loaders import DataLoaderGenerator
+from inputs.data_loaders import DataLoaderGenerator
 from machine_learning.models import get_model
 from machine_learning.optimizers import get_optimizer
 from machine_learning.losses import get_loss
+from outputs.tensorboard_writer import TensorBoardSummaryWriter
 from train import train
 import warnings
 warnings.filterwarnings("ignore")
@@ -35,6 +37,10 @@ def load_json(file_path):
     with open(file_path, 'r') as stream:    
         return json.load(stream)
 
+def save_json(file_path, data):
+    with open(file_path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
 
 def main(configs):
     """
@@ -44,7 +50,7 @@ def main(configs):
     batch_size = configs["batch_size"]
     validation_split = configs["validation_split"]
     test_split = configs["test_split"]
-    #tensorboard_path = configs["tensorboard_path"]
+    tensorboard_path = configs["tensorboard_path"]
     #file_extension = configs["file_extension"]
     #previous_model_address = configs["previous_model_address"]
     model_name = configs["model_name"]
@@ -55,6 +61,7 @@ def main(configs):
     loss_function = configs["loss_function"]
     metrics_of_interest = configs["metrics_of_interest"]
 
+    writer = TensorBoardSummaryWriter(tensorboard_path, filename_suffix= "mnist_test")
 
     data_loader_generator = DataLoaderGenerator(base_path,  
                                                 batch_size, 
@@ -90,6 +97,7 @@ def main(configs):
                                     metric_dataframe ,    
                                     metrics_of_interest,
                                     num_epochs,
+                                    writer, 
                                     device )
     metric_dataframe.to_csv("test.csv", index = False)
 
