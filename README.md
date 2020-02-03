@@ -8,3 +8,6 @@ In this repository, you can find pytorch based computer vision code which can be
 
 - [ ] add documentation
 - [ ] add tensorboard 
+- [ ] add more metrics 
+- [ ] add saving models
+- [ ] add early stopping
