@@ -58,14 +58,15 @@ def plot_classes_preds(net, images, labels):
     return fig
 
 class TensorBoardSummaryWriter(object):
-    def __init__(self, output_path, filename_suffix):
-        self.writer = SummaryWriter(output_path, filename_suffix = filename_suffix)
+    def __init__(self, output_path ):
+        self.writer = SummaryWriter(output_path )
     
     def add_loss(self,loss_type, loss_value, x_value):
          
         self.writer.add_scalar(loss_type ,
                      loss_value,
                      x_value)
+        self.writer.close()
 
     def add_metrics(self,df, metrics_of_interest,epoch):
         for s in ["train","validation","test"]:
@@ -77,6 +78,7 @@ class TensorBoardSummaryWriter(object):
                 self.writer.add_scalar( mt+ "/" +s  ,
                      df.loc[indx,"value"].iloc[0],
                       epoch )
+        self.writer.close()
         
     def add_image(self, image_name, images ):
         # create grid of images
@@ -88,6 +90,7 @@ class TensorBoardSummaryWriter(object):
  
         # write to tensorboard
         self.writer.add_image(image_name, img_grid)
+        self.writer.close()
 
     def add_graph(self, model, data_loader_generator ):
         images, _ = select_n_random(data_loader_generator.train_dataset )
@@ -106,5 +109,6 @@ class TensorBoardSummaryWriter(object):
 
         self.writer.add_embedding(mat = features ,
                      metadata=class_labels,
-                     label_img=images[:,0:min(3,images.shape[1] ),:,:])
-
+                     label_img=images[:,0:min(3,images.shape[1] ),:,:],
+                     global_step = 1)
+        self.writer.close()
