@@ -2,7 +2,7 @@ import torch
 import torchvision
 from machine_learning.metrics import metric_history
 import time
-
+import os
 
 def train(  model,   
             data_loader_generator, 
@@ -12,6 +12,7 @@ def train(  model,
             metrics_of_interest,
             num_epochs,
             writer, 
+            model_folder,
             device = 'cpu'):
     
 
@@ -33,7 +34,7 @@ def train(  model,
 
             # forward + backward + optimize 
             outputs = model(inputs) 
-            loss = criterion(outputs, labels)
+            loss = criterion(outputs, labels) 
             loss.backward()
             optimizer.step()
 
@@ -42,12 +43,10 @@ def train(  model,
             # print loss every 5 minibatches
             if i % 5 == 4:
                 print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 5))
-                
-                writer.add_loss('training loss',
-                            running_loss / 5,
-                            epoch * len(data_loader_generator.trainloader) + i)
                 running_loss = 0.0
-        
+            
+            model_path = os.path.join(model_folder, "epoch_" + str(epoch) + ".pth" )
+            torch.save(model.state_dict(), model_path)
 
         with torch.no_grad():  
             
@@ -75,5 +74,7 @@ def train(  model,
 
     print('Finished Training')
     writer.add_graph(model, data_loader_generator)
+
     writer.add_embedding( model, data_loader_generator)
+    
     return  model, metric_dataframe 
