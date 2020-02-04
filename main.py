@@ -3,6 +3,7 @@ import torchvision
 from torch.utils.tensorboard import SummaryWriter
 import argparse
 import sys
+from datetime import datetime
 import os
 import io
 import importlib
@@ -33,6 +34,10 @@ torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)
 
+def make_folders(tb_path, run_name,desired_folder):
+    os.mkdir(os.path.join(tb_path,run_name ,desired_folder))
+    return None
+
 def load_json(file_path):
     with open(file_path, 'r') as stream:    
         return json.load(stream)
@@ -61,8 +66,15 @@ def main(configs):
     loss_function = configs["loss_function"]
     metrics_of_interest = configs["metrics_of_interest"]
 
-    writer = TensorBoardSummaryWriter(tensorboard_path, filename_suffix= "mnist_test")
+    run_name = str(datetime.now()) + "_" + \
+                    model_name + "_bs_" + str(batch_size)
+                         
+    
 
+    writer = TensorBoardSummaryWriter( os.path.join(tensorboard_path, run_name ) )
+    make_folders(tensorboard_path, run_name, "models/")
+    model_folder = os.path.join(tensorboard_path, run_name, "models/")
+    
     data_loader_generator = DataLoaderGenerator(base_path,  
                                                 batch_size, 
                                                 validation_split, 
@@ -98,8 +110,15 @@ def main(configs):
                                     metrics_of_interest,
                                     num_epochs,
                                     writer, 
+                                    model_folder,
                                     device )
-    metric_dataframe.to_csv("test.csv", index = False)
+                                    
+    make_folders(tensorboard_path, run_name, "output_files/")
+
+    metric_dataframe.to_csv(os.path.join(tensorboard_path, run_name , 
+            "output_files","aggregated_results.csv"), index = False)
+    data_loader_generator.df.to_csv(os.path.join(tensorboard_path, run_name , 
+            "output_files","granular_results.csv"), index = False)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser( \
