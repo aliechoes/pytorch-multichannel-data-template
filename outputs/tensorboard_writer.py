@@ -69,15 +69,16 @@ class TensorBoardSummaryWriter(object):
         self.writer.close()
 
     def add_metrics(self,df, metrics_of_interest,epoch):
-        for s in ["train","validation","test"]:
-            for mt in metrics_of_interest:
-
+        for mt in metrics_of_interest:
+            results = dict()
+            for s in ["train","validation","test"]:
+                
                 indx = ((df["set"] == s) & (df["metric"] == mt)) & \
                     (df["epoch"] == (epoch + 1))
-                    
-                self.writer.add_scalar( mt+ "/" +s  ,
-                     df.loc[indx,"value"].iloc[0],
-                      epoch )
+                
+                results[s] = df.loc[indx,"value"].iloc[0]
+            self.writer.add_scalars( mt,results ,epoch +1)
+
         self.writer.close()
         
     def add_image(self, image_name, images ):
