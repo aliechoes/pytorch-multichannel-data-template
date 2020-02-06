@@ -130,4 +130,5 @@ def get_model(model_name, device, num_channels ,num_classes):
     
     if device is 'cpu':
         model = model.to(device)
+    print(model)
     return model, reshape_size
