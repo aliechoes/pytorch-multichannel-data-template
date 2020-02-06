@@ -49,15 +49,18 @@ def save_json(file_path, data):
 
 def main(configs):
     """
-    main file
+    This is the main function which includes the main logic of the script.
+    
+    Args    
+        configs: dictionary file with the format of the config file
     """
     base_path = configs["base_path"]
     batch_size = configs["batch_size"]
     validation_split = configs["validation_split"]
     test_split = configs["test_split"]
     tensorboard_path = configs["tensorboard_path"]
-    #file_extension = configs["file_extension"]
-    #previous_model_address = configs["previous_model_address"]
+    file_extension = configs["file_extension"]
+    previous_model_address = configs["previous_model_address"]
     model_name = configs["model_name"]
     num_epochs = configs["num_epochs"]
     device = configs["device"]
@@ -66,44 +69,53 @@ def main(configs):
     loss_function = configs["loss_function"]
     metrics_of_interest = configs["metrics_of_interest"]
 
+    # creating a unique name for the model
     run_name = str(datetime.now()) + "_" + \
                     model_name + "_bs_" + str(batch_size)
                          
     
-
+    # creating the tensorboard
     writer = TensorBoardSummaryWriter( os.path.join(tensorboard_path, run_name ) )
-    make_folders(tensorboard_path, run_name, "models/")
+
+    # creating the folder for the models to be saved per epoch
     model_folder = os.path.join(tensorboard_path, run_name, "models/")
+    make_folders(tensorboard_path, run_name, "models/")
+
     
-    data_loader_generator = DataLoaderGenerator(base_path,  
+    # creating the dataloader
+    data_loader = DataLoaderGenerator(base_path,  
                                                 batch_size, 
                                                 validation_split, 
                                                 test_split) 
-    data_loader_generator.data_frame_creator()
+    data_loader.data_frame_creator()
     
+    # number of exsting channels and output classes
+    number_of_channels = len(data_loader.existing_channels)
+    number_of_classes = len(data_loader.nb_per_class.keys())
 
-    number_of_channels = len(data_loader_generator.existing_channels)
-    number_of_classes = len(data_loader_generator.nb_per_class.keys())
-
+    # initialize the model
     model, reshape_size = get_model(  model_name, 
                         device,
                         number_of_channels ,
                         number_of_classes)
-    print(model)
-    data_loader_generator.data_loader_generator(reshape_size)
+    
+    data_loader.data_loader(reshape_size)
 
     ## load the optimzer
     optimizer = get_optimizer(   optimization_method, 
                                 model, 
                                 optimization_parameters) 
+    
     ## load the loss
     criterion = get_loss(loss_function) 
 
+    # creating a dataframe which will contain all the metrics per set per epoch
     metric_dataframe = pd.DataFrame(columns= ["epoch","set", "metric", "value"])
     
     
+    # train the model and record the results in the metric_dataframe
     model, metric_dataframe = train( model,   
-                                    data_loader_generator, 
+                                    data_loader, 
                                     optimizer,
                                     criterion,
                                     metric_dataframe ,    
@@ -113,12 +125,19 @@ def main(configs):
                                     model_folder,
                                     device )
                                     
+    # save the dataset with train/validation/test per epoch
     make_folders(tensorboard_path, run_name, "output_files/")
-
     metric_dataframe.to_csv(os.path.join(tensorboard_path, run_name , 
             "output_files","aggregated_results.csv"), index = False)
-    data_loader_generator.df.to_csv(os.path.join(tensorboard_path, run_name , 
+    
+    # save the label of all images and their predictions
+    data_loader.df.to_csv(os.path.join(tensorboard_path, run_name , 
             "output_files","granular_results.csv"), index = False)
+
+
+
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser( \

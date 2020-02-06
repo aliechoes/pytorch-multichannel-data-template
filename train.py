@@ -19,7 +19,7 @@ def train(  model,
     for epoch in range(num_epochs):  # loop over the dataset multiple times
 
         running_loss = 0.0
-        for i, data in enumerate(data_loader_generator.trainloader, 0):
+        for i, data in enumerate(data_loader.trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
             
             inputs, labels = data["image"], data["label"]

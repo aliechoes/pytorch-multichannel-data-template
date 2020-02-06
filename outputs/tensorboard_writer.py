@@ -87,24 +87,24 @@ class TensorBoardSummaryWriter(object):
 
 
         # get the class labels for each image
-        class_labels = [data_loader_generator.classes[lab] for lab in labels]
+        class_labels = [data_loader.classes[lab] for lab in labels]
  
         # write to tensorboard
         self.writer.add_image(image_name, img_grid)
         self.writer.close()
 
-    def add_graph(self, model, data_loader_generator ):
-        images, _ = select_n_random(data_loader_generator.train_dataset )
+    def add_graph(self, model, data_loader ):
+        images, _ = select_n_random(data_loader.train_dataset )
         images = images.float() 
 
         self.writer.add_graph(model.cpu(), images.cpu())
         self.writer.close()
     
-    def add_embedding(self, model, data_loader_generator):
-        images, labels = select_n_random(data_loader_generator.train_dataset )
+    def add_embedding(self, model, data_loader):
+        images, labels = select_n_random(data_loader.train_dataset )
         images = images.float()
         # get the class labels for each image
-        class_labels = [data_loader_generator.classes[lab] for lab in labels]
+        class_labels = [data_loader.classes[lab] for lab in labels]
  
         features = model.embedding_generator(images)
 

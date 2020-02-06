@@ -254,7 +254,7 @@ class DataLoaderGenerator():
         self.mean = mean
         self.std = std
 
-    def data_loader_generator(self, reshape_size):
+    def data_loader(self, reshape_size):
 
         self.reshape_size = reshape_size
         self.calculate_statistics()
