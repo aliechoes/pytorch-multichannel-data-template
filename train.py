@@ -5,7 +5,7 @@ import time
 import os
 
 def train(  model,   
-            data_loader_generator, 
+            data_loader, 
             optimizer,
             criterion,
             metric_dataframe ,    
@@ -50,7 +50,7 @@ def train(  model,
 
         with torch.no_grad():  
             
-            for i, data in enumerate(data_loader_generator.validationloader, 0): 
+            for i, data in enumerate(data_loader.validationloader, 0): 
                 idx = data["idx"].to(device).numpy()[0]  
                 inputs, labels = data["image"], data["label"]
                 inputs, labels = inputs.to(device) , labels.to(device)
@@ -61,11 +61,11 @@ def train(  model,
                 outputs = model(inputs)
                 _, predicted = torch.max(outputs.data, 1)
                 
-                data_loader_generator.df.loc[idx,"prediction"] = predicted.numpy()[0]
+                data_loader.df.loc[idx,"prediction"] = predicted.numpy()[0]
                 
  
 
-            metric_dataframe = metric_history(data_loader_generator.df, 
+            metric_dataframe = metric_history(data_loader.df, 
                             metric_dataframe, 
                             epoch, 
                             metrics_of_interest )
@@ -73,8 +73,8 @@ def train(  model,
             writer.add_metrics(metric_dataframe,metrics_of_interest ,epoch)
 
     print('Finished Training')
-    writer.add_graph(model, data_loader_generator)
+    writer.add_graph(model, data_loader)
 
-    writer.add_embedding( model, data_loader_generator)
+    writer.add_embedding( model, data_loader)
     
     return  model, metric_dataframe 
