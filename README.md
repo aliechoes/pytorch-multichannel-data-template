@@ -20,5 +20,5 @@ pillow=='6.2.0'
 - [ ] add documentation
 - [ ] add tensorboard 
 - [x] add more metrics 
-- [ ] add saving models
+- [x] add saving models
 - [ ] add early stopping
