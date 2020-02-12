@@ -42,7 +42,7 @@ def train(  model,
 
             # print loss every 5 minibatches
             if i % 5 == 4:
-                print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 5))
+                print('[epoch: %d, minibatch %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 5))
                 running_loss = 0.0
             
             model_path = os.path.join(model_folder, "epoch_" + str(epoch) + ".pth" )

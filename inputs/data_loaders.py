@@ -61,7 +61,7 @@ def number_of_files_per_class(classes, base_path, existing_channels,
     for cl in classes:
         cl_path = os.path.join(base_path, cl, "*" + file_extension) 
         cl_files = glob.glob(cl_path) 
-        
+
         results[cl] = int(float(len(cl_files))/float(len(existing_channels)))
     return results
     
@@ -269,7 +269,7 @@ class DataLoaderGenerator():
 
         self.trainloader = DataLoader(self.train_dataset, 
                                 batch_size=self.batch_size, \
-                                shuffle=False, 
+                                shuffle=True, 
                                 num_workers=4)
 
         self.validation_dataset = Dataset_Generator(self.base_path, 

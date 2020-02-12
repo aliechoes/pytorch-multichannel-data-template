@@ -3,14 +3,16 @@ from sklearn.metrics import  accuracy_score
 from sklearn.metrics import f1_score
 from sklearn.metrics import log_loss
 import numpy as np
+from sklearn.metrics import confusion_matrix
 
-def custom_log_loss(y_true, y_pred, existing_labels):
+
+def custom_log_loss(y_true, y_pred, existing_labels): 
     custom_y_pred = np.zeros((y_true.shape[0], len(existing_labels)))
     
     for i in range(0, len(y_true)):
         j = y_pred[i]
-        custom_y_pred[i,j ] = 1 
-    return log_loss(y_true, custom_y_pred)
+        custom_y_pred[i,j ] = 1  
+    return log_loss(y_true, custom_y_pred, labels=existing_labels)
 
 
 def metric_history(df, metric_dataframe, epoch, metrics_of_interest ):
@@ -23,6 +25,7 @@ def metric_history(df, metric_dataframe, epoch, metrics_of_interest ):
         y_pred = df_temp["prediction"].astype(int)
         
         assert (y_pred == -1).sum()== 0  
+        
 
         if "accuracy" in metrics_of_interest:
             results_temp = {

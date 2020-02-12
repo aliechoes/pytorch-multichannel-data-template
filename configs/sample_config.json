@@ -3,11 +3,11 @@
     "batch_size": 64,
     "validation_split": 0.1,
     "test_split": 0.1,
-    "tensorboard_path": "/home/ali/code/sample-data/tensorboard/mnist",
+    "tensorboard_path": "/home/ali/code/sample-data/tensorboard/synapse",
     "file_extension": ".jpg",
     "previous_model_address": null,
     "model_name": "ShallowNet",
-    "num_epochs": 15,
+    "num_epochs": 100,
     "device": "cpu",
     "optimization_parameters": {
       "lr": 0.001,
