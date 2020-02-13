@@ -128,7 +128,6 @@ def get_model(model_name, device, num_channels ,num_classes):
         reshape_size = 28
         model = ShallowNet(num_channels ,num_classes)
     
-    if device is 'cpu':
-        model = model.to(device)
+    model = model.to(device)
     print(model)
     return model, reshape_size

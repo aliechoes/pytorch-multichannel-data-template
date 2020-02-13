@@ -51,7 +51,7 @@ def train(  model,
         with torch.no_grad():  
             
             for i, data in enumerate(data_loader.validationloader, 0): 
-                idx = data["idx"].to(device).numpy()[0]  
+                idx = data["idx"].cpu().numpy()[0]  
                 inputs, labels = data["image"], data["label"]
                 inputs, labels = inputs.to(device) , labels.to(device)
                 
@@ -61,7 +61,7 @@ def train(  model,
                 outputs = model(inputs)
                 _, predicted = torch.max(outputs.data, 1)
                 
-                data_loader.df.loc[idx,"prediction"] = predicted.numpy()[0]
+                data_loader.df.loc[idx,"prediction"] = predicted.cpu().numpy()[0]
                 
  
 
