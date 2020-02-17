@@ -16,6 +16,7 @@ def custom_log_loss(y_true, y_pred, existing_labels):
 
 
 def metric_history(df, metric_dataframe, epoch, metrics_of_interest ):
+    print(8*"---")
     print(("epoch", epoch))
     existing_labels = df["label"].unique().tolist()
     for s in ["train", "validation", "test"]:
