@@ -15,10 +15,20 @@ skimage=='0.16.2'
 pillow=='6.2.0'
 ```
 
+## Folders
+
+* [configs](configs): includes the config files
+* [inputs](inputs): includes the preprocessing models as well as the data loader
+* [machine_learning](machine_learning): includes the models, metrics, losses as well as the optimizers.
+* [outputs](outputs): includes the methods for tensorboard as well as saving results
+
 ## TODO
 
 - [ ] add documentation
-- [ ] add tensorboard 
+- [x] add tensorboard 
+- [ ] add config tracker in tensorboard
+- [ ] add pr-cruve
+- [ ] add saving matplotlib saving using tensorboard
 - [x] add more metrics 
 - [x] add saving models
 - [ ] add early stopping
