@@ -71,7 +71,7 @@ def train(  model,
                             metrics_of_interest )
 
             writer.add_metrics(metric_dataframe,metrics_of_interest ,epoch)
-            writer.add_embedding( model, data_loader, epoch)
+            writer.add_embedding( model, data_loader, epoch, device)
             writer.add_images( data_loader, epoch )
 
 

@@ -34,8 +34,8 @@ torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)
 
-def make_folders(tb_path, run_name,desired_folder):
-    os.mkdir(os.path.join(tb_path,run_name ,desired_folder))
+def make_folders(desired_path):
+    os.mkdir(desired_path)
     return None
 
 def load_json(file_path):
@@ -54,13 +54,16 @@ def main(configs):
     Args    
         configs: dictionary file with the format of the config file
     """
-    base_path = configs["base_path"]
+    data_dir = configs["data_dir"]
+    mask_dir = configs["mask_dir"]
     batch_size = configs["batch_size"]
     validation_split = configs["validation_split"]
     test_split = configs["test_split"]
     tensorboard_path = configs["tensorboard_path"]
     file_extension = configs["file_extension"]
-    previous_model_address = configs["previous_model_address"]
+    # TODO: transfer learning
+    #previous_model_address = configs["previous_model_address"]
+
     model_name = configs["model_name"]
     num_epochs = configs["num_epochs"]
     device = configs["device"]
@@ -79,14 +82,16 @@ def main(configs):
 
     # creating the folder for the models to be saved per epoch
     model_folder = os.path.join(tensorboard_path, run_name, "models/")
-    make_folders(tensorboard_path, run_name, "models/")
+    make_folders(model_folder)
 
     
     # creating the dataloader
-    data_loader = DataLoaderGenerator(base_path,  
-                                                batch_size, 
-                                                validation_split, 
-                                                test_split) 
+    data_loader = DataLoaderGenerator(  data_dir, 
+                                        mask_dir, 
+                                        file_extension,  
+                                        batch_size, 
+                                        validation_split, 
+                                        test_split) 
     data_loader.data_frame_creator()
     
     # number of exsting channels and output classes
@@ -126,13 +131,14 @@ def main(configs):
                                     device )
                                     
     # save the dataset with train/validation/test per epoch
-    make_folders(tensorboard_path, run_name, "output_files/")
-    metric_dataframe.to_csv(os.path.join(tensorboard_path, run_name , 
-            "output_files","aggregated_results.csv"), index = False)
+    output_folder = os.path.join(tensorboard_path, run_name, "output_files/")
+    make_folders(output_folder)
+    metric_dataframe.to_csv(os.path.join(output_folder,
+                                    "aggregated_results.csv"), index = False)
     
     # save the label of all images and their predictions
-    data_loader.df.to_csv(os.path.join(tensorboard_path, run_name , 
-            "output_files","granular_results.csv"), index = False)
+    data_loader.df.to_csv(os.path.join(output_folder,
+                                    "granular_results.csv"), index = False)
 
 
 

@@ -4,7 +4,7 @@ import glob
 import os
 
 def main(main_path, desired_size = 256):
-    list_of_files = glob.glob(os.path.join(main_path,"*.jpg"))
+    list_of_files = glob.glob(os.path.join(main_path,"*.png"))
     for f in list_of_files:
         try:
             image = imread(f)

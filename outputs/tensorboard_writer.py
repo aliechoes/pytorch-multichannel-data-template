@@ -109,8 +109,10 @@ class TensorBoardSummaryWriter(object):
         self.writer.add_graph(model.cpu(), images.cpu())
         self.writer.close()
     
-    def add_embedding(self, model, data_loader, epoch):
+    def add_embedding(self, model, data_loader, epoch, device):
         images, labels = select_n_random(data_loader.train_dataset )
+        labels = labels.cpu()
+        images = images.to(device)
         images = images.float()
         # get the class labels for each image
         class_labels = [data_loader.classes[lab] for lab in labels]

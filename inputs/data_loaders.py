@@ -20,17 +20,17 @@ from skimage.transform import   rescale, resize
 from imageio import imread
 from torchvision import transforms
 
-def finding_classes(base_path):
+def finding_classes(data_dir):
     """
     this function finds the folders in the root path and considers them
     as classes
     """
-    classes = os.listdir(base_path)
+    classes = os.listdir(data_dir)
     print(classes)
     return classes
 
-def finding_channels(   classes, base_path, 
-                        file_prefix = "" ,file_extension = ".jpg"):
+def finding_channels(   classes, data_dir, 
+                        file_prefix = "" , file_extension = ".png"):
     """
     this function finds the existing channels in the folder and returns
     a list of them
@@ -40,7 +40,7 @@ def finding_channels(   classes, base_path,
                                "Ch13", "Ch14", "Ch15", "Ch16", "Ch17", "Ch18"]
     existing_channels = []
     for ch in channels:
-        cl_path = os.path.join(base_path, classes[0], file_prefix +  "*_" + \
+        cl_path = os.path.join(data_dir, classes[0], file_prefix +  "*_" + \
             ch + file_extension)
         cl_files = glob.glob(cl_path)
         if len(cl_files)> 1:
@@ -48,8 +48,8 @@ def finding_channels(   classes, base_path,
     return existing_channels
         
         
-def number_of_files_per_class(classes, base_path, existing_channels,
-                        file_prefix = "" ,file_extension = ".jpg" ):
+def number_of_files_per_class(classes, data_dir, existing_channels,
+                        file_prefix = "" ,file_extension = ".png" ):
     """
     this function finds the number of files in each folder. it is important
     as with this, we can call all the files. In Amnis, each experiment
@@ -59,7 +59,7 @@ def number_of_files_per_class(classes, base_path, existing_channels,
     """
     results = dict()
     for cl in classes:
-        cl_path = os.path.join(base_path, cl, "*" + file_extension) 
+        cl_path = os.path.join(data_dir, cl, "*" + file_extension) 
         cl_files = glob.glob(cl_path) 
 
         results[cl] = int(float(len(cl_files))/float(len(existing_channels)))
@@ -109,14 +109,14 @@ def train_validation_test_split(df, validation_size= 0.2 , test_size = 0.3 ,
 class Dataset_Generator(Dataset):
     """Dataset_Generator"""
 
-    def __init__(self,  base_path, df , channels , set_type , 
+    def __init__(self,  data_dir, mask_dir, file_extension, df , channels , set_type , 
                     reshape_size = 32, mean = None , std = None):
         """
         Args:
             csv_file (string): Path to the csv file with annotations.
-            base_path (string): Directory with all the images.
-            transform (callable, optional): Optional transform to be applied
-                on a sample.
+            data_dir (string): Directory with all the images.
+            mask_dir (string): Directory with all the masks. It should follow
+                the same order as the data_dir
         """
         self.df = df.copy().reset_index(drop = True)
         
@@ -124,7 +124,9 @@ class Dataset_Generator(Dataset):
         if set_type is not None:
             self.df = self.df[self.df["set"]==set_type].reset_index(drop = True) 
         
-        self.base_path = base_path
+        self.data_dir = data_dir
+        self.mask_dir = mask_dir
+        self.file_extension = file_extension
         self.reshape_size = reshape_size
         self.channels = channels
         self.mean = mean
@@ -141,9 +143,9 @@ class Dataset_Generator(Dataset):
         image = np.zeros((len(self.channels), self.reshape_size, self.reshape_size))
         #print(("idx", idx))
         for ch in range(0,len(self.channels) ): 
-            img_name = os.path.join(self.base_path,self.df.loc[idx,"class"], \
+            img_name = os.path.join(self.data_dir,self.df.loc[idx,"class"], \
                                    str(self.df.loc[idx,"file"])  +"_" + \
-                                       self.channels[ch] + ".jpg")
+                                       self.channels[ch] + self.file_extension)
             image_dummy = imread(img_name)
             image_dummy = resize(image_dummy , (self.reshape_size, self.reshape_size) )  
             image[ch,:,:] = image_dummy
@@ -163,20 +165,28 @@ class Dataset_Generator(Dataset):
 
 
 class DataLoaderGenerator():
-    def __init__(self, base_path, batch_size, validation_split, test_split):
-        self.base_path = base_path 
+    def __init__(self, data_dir, mask_dir, file_extension ,
+                                batch_size, validation_split, test_split):
+        self.data_dir = data_dir 
+        self.mask_dir = mask_dir
+        self.file_extension = file_extension
         self.batch_size = batch_size
         self.validation_split = validation_split
         self.test_split = test_split
         
     def data_frame_creator(self):
         
-        self.classes = finding_classes(self.base_path)
-        self.existing_channels = finding_channels(self.classes, self.base_path)
+        self.classes = finding_classes(self.data_dir)
+        self.existing_channels = finding_channels(  self.classes, 
+                                                    self.data_dir,
+                                                    "",
+                                                    self.file_extension)
 
         self.nb_per_class = number_of_files_per_class(  self.classes, \
-                                                        self.base_path, \
-                                                        self.existing_channels)
+                                                        self.data_dir, \
+                                                        self.existing_channels,
+                                                        "",
+                                                        self.file_extension)
         print("detected files per class")
         print(self.nb_per_class)
 
@@ -192,11 +202,13 @@ class DataLoaderGenerator():
         This functions creates the trainloader and calulates the mean
         and standard deviation for the training set
         """
-        train_dataset = Dataset_Generator(    self.base_path, 
-                                                self.df , 
-                                                self.existing_channels , 
-                                                "train" , 
-                                                self.reshape_size )
+        train_dataset = Dataset_Generator(  self.data_dir, 
+                                            self.mask_dir,
+                                            self.file_extension, 
+                                            self.df , 
+                                            self.existing_channels , 
+                                            "train" , 
+                                            self.reshape_size )
 
         trainloader = DataLoader(   train_dataset, \
                                     batch_size=self.batch_size, \
@@ -226,10 +238,11 @@ class DataLoaderGenerator():
 
         self.reshape_size = reshape_size
         self.calculate_statistics()
-                                        
-        self.train_dataset = Dataset_Generator(self.base_path, 
+        self.train_dataset = Dataset_Generator(self.data_dir, 
+                                            self.mask_dir,
+                                            self.file_extension, 
                                             self.df , 
-                                            self.existing_channels  ,  
+                                            self.existing_channels ,  
                                             "train" , 
                                             self.reshape_size , 
                                             self.mean, 
@@ -240,9 +253,11 @@ class DataLoaderGenerator():
                                 shuffle=True, 
                                 num_workers=4)
 
-        self.validation_dataset = Dataset_Generator(self.base_path, 
+        self.validation_dataset = Dataset_Generator(self.data_dir, 
+                                            self.mask_dir,
+                                            self.file_extension, 
                                             self.df , 
-                                            self.existing_channels  ,  
+                                            self.existing_channels ,  
                                             None , 
                                             self.reshape_size , 
                                             self.mean, 
