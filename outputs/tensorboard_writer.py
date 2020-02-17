@@ -127,5 +127,4 @@ class TensorBoardSummaryWriter(object):
                         global_step = epoch + 1)
             self.writer.close()
     
-    def pr_curve(self, model, data_loader, epoch): 
-        pass
+ 
