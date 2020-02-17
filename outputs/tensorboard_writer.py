@@ -81,17 +81,26 @@ class TensorBoardSummaryWriter(object):
 
         self.writer.close()
         
-    def add_image(self, image_name, images ):
+    def add_images(self,  data_loader, epoch ):
+   
+        idx = data_loader.df.groupby('class')['class'].apply(lambda s: s.sample(1))
+        idx = idx.index 
         # create grid of images
-        img_grid = torchvision.utils.make_grid(images)
-
-
-        # get the class labels for each image
-        class_labels = [data_loader.classes[lab] for lab in labels]
+        nb_channels = len(data_loader.existing_channels)
+        
+        for i in range(nb_channels):
+            temp_images = torch.zeros( len(data_loader.classes), 
+                            1, 
+                            data_loader.reshape_size, 
+                            data_loader.reshape_size  ).cpu() 
+            for j in range(len(idx)):
+                temp_data = data_loader.validation_dataset.__getitem__(idx[j][1]) 
+                temp_images[j,:,:,:] = temp_data["image"].cpu()[i,:,:]
+            
+            self.writer.add_images( "Channel"+str(i+1), temp_images, epoch )
+            self.writer.close()
  
-        # write to tensorboard
-        self.writer.add_image(image_name, img_grid)
-        self.writer.close()
+        
 
     def add_graph(self, model, data_loader ):
         images, _ = select_n_random(data_loader.train_dataset )

@@ -64,17 +64,20 @@ def train(  model,
                 data_loader.df.loc[idx,"prediction"] = predicted.cpu().numpy()[0]
                 
  
-
+            
             metric_dataframe = metric_history(data_loader.df, 
                             metric_dataframe, 
                             epoch, 
                             metrics_of_interest )
 
             writer.add_metrics(metric_dataframe,metrics_of_interest ,epoch)
+            writer.add_embedding( model, data_loader, epoch)
+            writer.add_images( data_loader, epoch )
+
 
     print('Finished Training')
     writer.add_graph(model, data_loader)
 
-    writer.add_embedding( model, data_loader)
+    
     
     return  model, metric_dataframe 
