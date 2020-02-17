@@ -100,16 +100,21 @@ class TensorBoardSummaryWriter(object):
         self.writer.add_graph(model.cpu(), images.cpu())
         self.writer.close()
     
-    def add_embedding(self, model, data_loader):
+    def add_embedding(self, model, data_loader, epoch):
         images, labels = select_n_random(data_loader.train_dataset )
         images = images.float()
         # get the class labels for each image
         class_labels = [data_loader.classes[lab] for lab in labels]
  
         features = model.embedding_generator(images)
-
-        self.writer.add_embedding(mat = features ,
-                     metadata=class_labels,
-                     label_img=images[:,0:min(3,images.shape[1] ),:,:],
-                     global_step = 1)
-        self.writer.close()
+        images_shape = (images.shape[0], 1,  images.shape[2]  , images.shape[3] )
+        for j in range(images.shape[1]):
+            self.writer.add_embedding(tag = "Channel " + str(j+1),
+                        mat = features ,
+                        metadata=class_labels,
+                        label_img=images[:,j,:,:].reshape(images_shape),
+                        global_step = epoch + 1)
+            self.writer.close()
+    
+    def pr_curve(self, model, data_loader, epoch): 
+        pass
