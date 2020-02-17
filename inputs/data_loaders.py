@@ -106,40 +106,6 @@ def train_validation_test_split(df, validation_size= 0.2 , test_size = 0.3 ,
     return df
 
 
-def calculate_statistics(   base_path, 
-                            df , 
-                            channels ,
-                            reshape_size ):
-    """
-    This functions creates the trainloader and calulates the mean
-    and standard deviation for the training set
-    """
-    train_dataset = Dataset_Generator( base_path, df , channels , "train" , 
-                    reshape_size )
-
-    trainloader = DataLoader(train_dataset, batch_size=128, \
-        shuffle=False, num_workers=4)
-
-    mean = 0.
-    std = 0.
-    nb_samples = 0.
-
-    for data in trainloader:
-        batch_samples = data["image"].size(0)
-        data = data["image"].view(batch_samples, data["image"].size(1), -1)
-        
-        mean += data.mean(2).sum(0)
-        std += data.std(2).sum(0)
-        nb_samples += batch_samples
-        
-    train_dataset = None
-    trainloader = None
-
-    mean /= nb_samples
-    std /= nb_samples
-
-    return mean, std
-
 class Dataset_Generator(Dataset):
     """Dataset_Generator"""
 
