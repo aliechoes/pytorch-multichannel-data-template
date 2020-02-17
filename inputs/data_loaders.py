@@ -177,6 +177,8 @@ class DataLoaderGenerator():
         self.nb_per_class = number_of_files_per_class(  self.classes, \
                                                         self.base_path, \
                                                         self.existing_channels)
+        print("detected files per class")
+        print(self.nb_per_class)
 
         self.df = input_dataframe_generator(self.nb_per_class)
         self.df = train_validation_test_split(  self.df, 
