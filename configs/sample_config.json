@@ -1,5 +1,6 @@
 {
     "base_path": "/home/ali/code/mnist/",
+    "mask_dir": "/home/ali/Desktop/synapse_formation_test/images/",
     "batch_size": 64,
     "validation_split": 0.1,
     "test_split": 0.1,
