@@ -1,6 +1,5 @@
 import torch
 import torchvision
-from torch.utils.tensorboard import SummaryWriter
 import argparse
 import sys
 from datetime import datetime
@@ -18,11 +17,11 @@ import imageio
 import json
 import numpy as np 
 import pandas as pd
-from inputs.data_loaders import DataLoaderGenerator
+from data_loaders.data_loaders import DataLoaderGenerator
 from machine_learning.models import get_model
 from machine_learning.optimizers import get_optimizer
 from machine_learning.losses import get_loss
-from outputs.tensorboard_writer import TensorBoardSummaryWriter
+from tensorboard.tensorboard_writer import TensorBoardSummaryWriter
 from train import train
 import warnings
 warnings.filterwarnings("ignore")
