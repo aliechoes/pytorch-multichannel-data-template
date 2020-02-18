@@ -1,8 +1,18 @@
+
 import torch
 import torchvision
 from machine_learning.metrics import metric_history
 import time
 import os
+
+def early_stopping(validation_criteria, patience):
+    n = len(validation_criteria) - patience 
+    validation_difference = validation_criteria.iloc[n:-1] - validation_criteria.iloc[n] 
+    model_is_improved = (validation_difference > 0.).sum()
+    if model_is_improved > 0:
+        return False
+    else:
+        return True
 
 def train(  model,   
             data_loader, 
@@ -13,8 +23,12 @@ def train(  model,
             num_epochs,
             writer, 
             model_folder,
+            call_back,
             device = 'cpu'):
     
+    saving_period = call_back["saving_period"]
+    patience = call_back["patience"]
+    criteria = call_back["criteria"]
 
     for epoch in range(num_epochs):  # loop over the dataset multiple times
 
@@ -44,7 +58,8 @@ def train(  model,
             if i % 5 == 4:
                 print('[epoch: %d, minibatch %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 5))
                 running_loss = 0.0
-            
+
+        if  epoch % saving_period == (saving_period - 1):
             model_path = os.path.join(model_folder, "epoch_" + str(epoch + 1) + ".pth" )
             torch.save({
                 'epoch': epoch + 1,
@@ -78,11 +93,13 @@ def train(  model,
             writer.add_metrics(metric_dataframe,metrics_of_interest ,epoch)
             writer.add_embedding( model, data_loader, epoch, device)
             writer.add_images( data_loader, epoch )
+        
+        if epoch > 1.5*patience:
+            indx = (metric_dataframe["set"] == "validation") & (metric_dataframe["metric"] == criteria )
+            validation_criteria = metric_dataframe.loc[indx, "value"]
+            if early_stopping(validation_criteria, patience):
+                break
 
     writer.add_graph(model, data_loader)
     print('Finished Training')
-    
-
-    
-    
     return  model, metric_dataframe 

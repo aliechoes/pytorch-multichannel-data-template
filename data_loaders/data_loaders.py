@@ -232,7 +232,10 @@ class DataLoaderGenerator():
     def data_loader(self, reshape_size):
 
         self.reshape_size = reshape_size
+        print("Starting to calculate the statistics...")
         self.calculate_statistics()
+        print("Calculating the statistics is finished")
+        
         self.train_dataset = Dataset_Generator(self.data_dir,  
                                             self.file_extension, 
                                             self.df , 

@@ -1,21 +1,26 @@
 {
-    "data_dir": "/pstore/home/shetabs1/data/synapse_formation_test/images/",
-    "batch_size": 10,
+    "data_dir": "/pstore/data/DS4/aggregation_bodies/amnis_data/experiment_6/",
+    "batch_size": 128,
     "validation_split": 0.1,
     "test_split": 0.1,
-    "tensorboard_path": "/pstore/home/shetabs1/runs/synapse_formation_test/",
-    "file_extension": ".png",
+    "tensorboard_path": "/pstore/home/shetabs1/runs/aggregation_bodies/",
+    "file_extension": ".tiff",
     "checkpoint_path": null,
     "model_name": "ShallowNet",
-    "num_epochs": 5,
-    "device": "cpu",
+    "num_epochs": 100,
+    "device": "cuda",
     "optimization_parameters": {
       "lr": 0.001,
       "weight_decay": 0.1
     },
     "optimization_method": "adam",
     "loss_function": "nll_loss",
-    "metrics_of_interest": ["accuracy", "dice"]
+    "metrics_of_interest": ["accuracy", "dice"],
+    "call_back": {
+      "saving_period": 5,
+      "patience":10,
+      "criteria": "accuracy"
+    }
   }
             
   

@@ -74,6 +74,7 @@ def main(configs):
     optimization_method = configs["optimization_method"]
     loss_function = configs["loss_function"]
     metrics_of_interest = configs["metrics_of_interest"]
+    call_back = configs["call_back"]
 
     # check whether there is a model to continue for transfer learning
     checkpoint = get_checkpoint(checkpoint_path)
@@ -135,7 +136,8 @@ def main(configs):
                                     num_epochs,
                                     writer, 
                                     model_folder,
-                                    device )
+                                    call_back,
+                                    device)
                                     
     # save the dataset with train/validation/test per epoch
     output_folder = os.path.join(tensorboard_path, run_name, "output_files/")

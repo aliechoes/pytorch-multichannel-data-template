@@ -29,6 +29,8 @@ For using this code, you need to use the config file following information:
 * `optimization_method`: name of the optimizer in the file [optimizers.py](machine_learning/optimizers.py)
 * `loss_function`: name of the loss function in the file [losses.py](machine_learning/losses.py)
 * `metrics_of_interest`: list of metrics which should be trace. They should be same as the metrics in the files [metrics.py](machine_learning/metrics.py) 
+* ``call_back``: dictionary of parameters which are needed for early stopping as well as saving models. It includes `saving_period` which indicates how many epochs are the models are saved. `patience` which the model can tolerate not getting improved as well as the `criteria` which we look at for best model selection. The `criteria` must be one of the `metrics_of_interest`. 
+
 
 ## Running the Code
 
@@ -72,7 +74,6 @@ DATETIME_NOW + _  + MODEL + _bs_ + BATCHSIZE
 
 - [ ] add documentation
 - [ ] add GRAD-CAM
-- [ ] add tensorboard 
 - [x] add tensorboard 
 - [ ] add config tracker in tensorboard
 - [ ] add pr-cruve
@@ -81,4 +82,4 @@ DATETIME_NOW + _  + MODEL + _bs_ + BATCHSIZE
 - [x] add saving models
 - [x] add transfer learning
 - [ ] add data augmentation
-- [ ] add early stopping
+- [x] add early stopping
