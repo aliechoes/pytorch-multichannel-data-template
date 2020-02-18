@@ -109,14 +109,12 @@ def train_validation_test_split(df, validation_size= 0.2 , test_size = 0.3 ,
 class Dataset_Generator(Dataset):
     """Dataset_Generator"""
 
-    def __init__(self,  data_dir, mask_dir, file_extension, df , channels , set_type , 
+    def __init__(self,  data_dir,  file_extension, df , channels , set_type , 
                     reshape_size = 32, mean = None , std = None):
         """
         Args:
             csv_file (string): Path to the csv file with annotations.
-            data_dir (string): Directory with all the images.
-            mask_dir (string): Directory with all the masks. It should follow
-                the same order as the data_dir
+            data_dir (string): Directory with all the images. 
         """
         self.df = df.copy().reset_index(drop = True)
         
@@ -124,8 +122,7 @@ class Dataset_Generator(Dataset):
         if set_type is not None:
             self.df = self.df[self.df["set"]==set_type].reset_index(drop = True) 
         
-        self.data_dir = data_dir
-        self.mask_dir = mask_dir
+        self.data_dir = data_dir 
         self.file_extension = file_extension
         self.reshape_size = reshape_size
         self.channels = channels
@@ -165,10 +162,9 @@ class Dataset_Generator(Dataset):
 
 
 class DataLoaderGenerator():
-    def __init__(self, data_dir, mask_dir, file_extension ,
+    def __init__(self, data_dir,   file_extension ,
                                 batch_size, validation_split, test_split):
-        self.data_dir = data_dir 
-        self.mask_dir = mask_dir
+        self.data_dir = data_dir  
         self.file_extension = file_extension
         self.batch_size = batch_size
         self.validation_split = validation_split
@@ -202,8 +198,7 @@ class DataLoaderGenerator():
         This functions creates the trainloader and calulates the mean
         and standard deviation for the training set
         """
-        train_dataset = Dataset_Generator(  self.data_dir, 
-                                            self.mask_dir,
+        train_dataset = Dataset_Generator(  self.data_dir,  
                                             self.file_extension, 
                                             self.df , 
                                             self.existing_channels , 
@@ -238,8 +233,7 @@ class DataLoaderGenerator():
 
         self.reshape_size = reshape_size
         self.calculate_statistics()
-        self.train_dataset = Dataset_Generator(self.data_dir, 
-                                            self.mask_dir,
+        self.train_dataset = Dataset_Generator(self.data_dir,  
                                             self.file_extension, 
                                             self.df , 
                                             self.existing_channels ,  
@@ -253,8 +247,7 @@ class DataLoaderGenerator():
                                 shuffle=True, 
                                 num_workers=4)
 
-        self.validation_dataset = Dataset_Generator(self.data_dir, 
-                                            self.mask_dir,
+        self.validation_dataset = Dataset_Generator(self.data_dir,  
                                             self.file_extension, 
                                             self.df , 
                                             self.existing_channels ,  
