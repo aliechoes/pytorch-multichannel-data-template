@@ -1,6 +1,5 @@
 import torch
 import torchvision
-from torch.utils.tensorboard import SummaryWriter
 import argparse
 import sys
 from datetime import datetime
@@ -18,11 +17,11 @@ import imageio
 import json
 import numpy as np 
 import pandas as pd
-from inputs.data_loaders import DataLoaderGenerator
+from data_loaders.data_loaders import DataLoaderGenerator
 from machine_learning.models import get_model
 from machine_learning.optimizers import get_optimizer
 from machine_learning.losses import get_loss
-from outputs.tensorboard_writer import TensorBoardSummaryWriter
+from tensorboard_writer.tensorboard_writer import TensorBoardSummaryWriter
 from train import train
 import warnings
 warnings.filterwarnings("ignore")
@@ -46,6 +45,12 @@ def save_json(file_path, data):
     with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
+def get_checkpoint(file_path):
+    if file_path is not None:
+        checkpoint = torch.load(file_path)
+    else:
+        checkpoint = None
+    return checkpoint
 
 def main(configs):
     """
@@ -55,14 +60,12 @@ def main(configs):
         configs: dictionary file with the format of the config file
     """
     data_dir = configs["data_dir"]
-    mask_dir = configs["mask_dir"]
     batch_size = configs["batch_size"]
     validation_split = configs["validation_split"]
     test_split = configs["test_split"]
     tensorboard_path = configs["tensorboard_path"]
     file_extension = configs["file_extension"]
-    # TODO: transfer learning
-    #previous_model_address = configs["previous_model_address"]
+    checkpoint_path = configs["checkpoint_path"]
 
     model_name = configs["model_name"]
     num_epochs = configs["num_epochs"]
@@ -71,6 +74,9 @@ def main(configs):
     optimization_method = configs["optimization_method"]
     loss_function = configs["loss_function"]
     metrics_of_interest = configs["metrics_of_interest"]
+
+    # check whether there is a model to continue for transfer learning
+    checkpoint = get_checkpoint(checkpoint_path)
 
     # creating a unique name for the model
     run_name = str(datetime.now()) + "_" + \
@@ -86,8 +92,7 @@ def main(configs):
 
     
     # creating the dataloader
-    data_loader = DataLoaderGenerator(  data_dir, 
-                                        mask_dir, 
+    data_loader = DataLoaderGenerator(  data_dir,  
                                         file_extension,  
                                         batch_size, 
                                         validation_split, 
@@ -102,14 +107,16 @@ def main(configs):
     model, reshape_size = get_model(  model_name, 
                         device,
                         number_of_channels ,
-                        number_of_classes)
+                        number_of_classes,
+                        checkpoint)
     
     data_loader.data_loader(reshape_size)
 
     ## load the optimzer
     optimizer = get_optimizer(   optimization_method, 
                                 model, 
-                                optimization_parameters) 
+                                optimization_parameters, 
+                                checkpoint) 
     
     ## load the loss
     criterion = get_loss(loss_function) 

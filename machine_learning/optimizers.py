@@ -3,7 +3,8 @@ import torchvision
 import torch
 
    
-def get_optimizer(optimization_method, model,parameters): 
+def get_optimizer(optimization_method, model,parameters,
+                        checkpoint): 
  
     if optimization_method=="adam": 
         lr = parameters["lr"] 
@@ -11,4 +12,8 @@ def get_optimizer(optimization_method, model,parameters):
         optimizer = torch.optim.Adam(model.parameters(), 
                                         lr=lr,
                                         weight_decay=weight_decay) 
-        return optimizer
+    
+    if checkpoint is not None:
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    
+    return optimizer
