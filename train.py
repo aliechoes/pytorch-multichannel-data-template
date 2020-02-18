@@ -6,8 +6,11 @@ import time
 import os
 
 def early_stopping(validation_criteria, patience):
-    n = len(validation_criteria) - patience 
-    validation_difference = validation_criteria.iloc[n:-1] - validation_criteria.iloc[n] 
+    n0 = len(validation_criteria) - patience 
+    n1 = len(validation_criteria) + 1 
+    validation_difference = validation_criteria.iloc[n0:n1] - \
+                                    validation_criteria.iloc[n0] 
+    print(validation_difference > 0.)
     model_is_improved = (validation_difference > 0.).sum()
     if model_is_improved > 0:
         return False
@@ -95,9 +98,11 @@ def train(  model,
             writer.add_images( data_loader, epoch )
         
         if epoch > 1.5*patience:
-            indx = (metric_dataframe["set"] == "validation") & (metric_dataframe["metric"] == criteria )
+            indx =  (metric_dataframe["set"] == "validation") & \
+                        (metric_dataframe["metric"] == criteria )
             validation_criteria = metric_dataframe.loc[indx, "value"]
             if early_stopping(validation_criteria, patience):
+                print("The training has stopped as the early stopping is triggered")
                 break
 
     writer.add_graph(model, data_loader)
