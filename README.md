@@ -76,4 +76,5 @@ For example
 - [x] add more metrics 
 - [x] add saving models
 - [x] add transfer learning
+- [ ] add data augmentation
 - [ ] add early stopping
