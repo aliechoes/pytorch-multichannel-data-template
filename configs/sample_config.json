@@ -5,7 +5,7 @@
     "test_split": 0.1,
     "tensorboard_path": "/home/ali/code/sample-data/tensorboard/mnist/",
     "file_extension": ".jpg",
-    "previous_model_address": null,
+    "checkpoint_path": null,
     "model_name": "ShallowNet",
     "num_epochs": 5,
     "device": "cpu",

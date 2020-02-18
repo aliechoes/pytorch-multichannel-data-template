@@ -117,17 +117,19 @@ class UNet(nn.Module):
         logits = self.outc(x)
         return logits
 
-def get_model(model_name, device, num_channels ,num_classes):
+def get_model(model_name, device, num_channels ,num_classes,
+                        checkpoint):
     if model_name == "AlexNet":
         reshape_size = 256
         model = AlexNet(num_channels ,num_classes)
     if model_name == "ShallowNet":
         reshape_size = 28
-        model = ShallowNet(num_channels ,num_classes)
-    if model_name == "UNet":
-        reshape_size = 28
-        model = ShallowNet(num_channels ,num_classes)
+        model = ShallowNet(num_channels ,num_classes) 
     
+    # transfer learning
+    if checkpoint is not None:
+        model.load_state_dict(checkpoint['model_state_dict'])
+
     model = model.to(device)
     print(model)
     return model, reshape_size

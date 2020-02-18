@@ -17,7 +17,7 @@ For using this code, you need to use the config file following information:
 * `test_split`: percentage of test vs train-validation split
 * `tensorboard_path`: path to save tensorboard as well as other outputs
 * `file_extension`: file extension which exists in the data, for example `.png`
-* `previous_model_address`: the path, for transfer learning. In case it is not passed 
+* `checkpoint`: the path, for transfer learning. In case it is not passed 
                             it will not be considered.
 * `model_name`: the used architecture. The name should be exactly the same from the 
                 file [models.py](machine_learning/models.py):

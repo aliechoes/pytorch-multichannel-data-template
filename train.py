@@ -45,8 +45,13 @@ def train(  model,
                 print('[epoch: %d, minibatch %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 5))
                 running_loss = 0.0
             
-            model_path = os.path.join(model_folder, "epoch_" + str(epoch) + ".pth" )
-            torch.save(model.state_dict(), model_path)
+            model_path = os.path.join(model_folder, "epoch_" + str(epoch + 1) + ".pth" )
+            torch.save({
+                'epoch': epoch + 1,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': loss 
+            }, model_path) 
 
         with torch.no_grad():  
             
