@@ -54,7 +54,6 @@ def main(configs):
         configs: dictionary file with the format of the config file
     """
     data_dir = configs["data_dir"]
-    mask_dir = configs["mask_dir"]
     batch_size = configs["batch_size"]
     validation_split = configs["validation_split"]
     test_split = configs["test_split"]
