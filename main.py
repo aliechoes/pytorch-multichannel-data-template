@@ -21,7 +21,7 @@ from data_loaders.data_loaders import DataLoaderGenerator
 from machine_learning.models import get_model
 from machine_learning.optimizers import get_optimizer
 from machine_learning.losses import get_loss
-from tensorboard.tensorboard_writer import TensorBoardSummaryWriter
+from tensorboard_writer.tensorboard_writer import TensorBoardSummaryWriter
 from train import train
 import warnings
 warnings.filterwarnings("ignore")
