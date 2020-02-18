@@ -18,7 +18,8 @@ For using this code, you need to use the config file following information:
 * `tensorboard_path`: path to save tensorboard as well as other outputs
 * `file_extension`: file extension which exists in the data, for example `.png`
 * `checkpoint`: the path, for transfer learning. In case it is not passed 
-                            it will not be considered.
+                            it will not be considered. The checkpoint should include: 
+                `'epoch'`, `model.state_dict()`, `optimizer.state_dict()` and the `loss`.
 * `model_name`: the used architecture. The name should be exactly the same from the 
                 file [models.py](machine_learning/models.py):
 * `num_epochs`: Number of epochs
@@ -74,4 +75,5 @@ For example
 - [ ] add tensorboard 
 - [x] add more metrics 
 - [x] add saving models
+- [x] add transfer learning
 - [ ] add early stopping
