@@ -51,6 +51,22 @@ This code is based on these libraries:
 * `skimage=='0.16.2'`
 * `pillow=='6.2.0'`
 
+
+## Naming Convention
+
+Each run is named using multiple conditions to be able to distinguish their results. The naming is based on:
+
+```
+DATETIME_NOW + _  + MODEL + _bs_ + BATCHSIZE
+```
+
+For example
+
+```
+2020-02-17 09:55:29.100439_ShallowNet_bs_64
+```
+
+
 ## TODO
 
 - [ ] add documentation
