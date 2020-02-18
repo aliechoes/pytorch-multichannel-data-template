@@ -79,9 +79,9 @@ def train(  model,
             writer.add_embedding( model, data_loader, epoch, device)
             writer.add_images( data_loader, epoch )
 
-
-    print('Finished Training')
     writer.add_graph(model, data_loader)
+    print('Finished Training')
+    
 
     
     

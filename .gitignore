@@ -135,3 +135,9 @@ data_loader/.Rhistory
 inputs/.Rhistory
 
 preprocessing/.Rhistory
+
+code.sh
+
+launch_code.sh
+
+configs/sample_config.json
