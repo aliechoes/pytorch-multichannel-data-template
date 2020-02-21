@@ -126,5 +126,40 @@ class TensorBoardSummaryWriter(object):
                         label_img=images[:,j,:,:].reshape(images_shape),
                         global_step = epoch + 1)
             self.writer.close()
+        
+    def add_hparams(self, metric_dataframe, configs ):  
+        hparam_dict = configs["optimization_parameters"]
+        hparam_dict["batch_size"] = configs["batch_size"]
+        hparam_dict["validation_split"] = configs["validation_split"]
+        hparam_dict["test_split"] = configs["test_split"]  
+        hparam_dict["model_name"] = configs["model_name"] 
+        hparam_dict["optimization_method"] = configs["optimization_method"]
+        hparam_dict["loss_function"] = configs["loss_function"] 
+        if configs["checkpoint_path"] is None:
+           hparam_dict["transfer_learning"] = "No"
+        else:  
+           hparam_dict["transfer_learning"] = "Yes"  
+        max_epoch = metric_dataframe["epoch"].iloc[-1]
+        metric_dict = dict()
+        for m in configs["metrics_of_interest"] :
+            for s in ["validation"]:
+                indx = (metric_dataframe["set"] == s) & (metric_dataframe["metric"] == m)
+                indx = indx & ((metric_dataframe["epoch"] == max_epoch))
+                metric_dict[m] = round(metric_dataframe.loc[indx, "value"].iloc[0], 4)
+ 
+        self.writer.add_hparams(hparam_dict, metric_dict) 
+        self.writer.close()
     
+    def add_pr_curve(self, data_loader, epoch):
+        validation_index = data_loader.df["set"] == "validation"
+        df_validation =  data_loader.df[validation_index].copy()
+
+        for k, cl in enumerate(data_loader.classes,0):
+            probabilities = (df_validation.loc[:, cl + "_probability"]  ).to_numpy()
+            predictions = (df_validation["prediction"] == k).to_numpy()
+            self.writer.add_pr_curve(cl,
+                        predictions,
+                        probabilities,
+                        global_step=epoch)
+
  

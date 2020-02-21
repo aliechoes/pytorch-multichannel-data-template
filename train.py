@@ -1,6 +1,7 @@
 
 import torch
 import torchvision
+import torch.nn.functional as F
 from machine_learning.metrics import metric_history
 import time
 import os
@@ -66,12 +67,14 @@ def train(  model,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': loss 
-            }, model_path) 
+            }, model_path)  
 
         with torch.no_grad():  
             
             for i, data in enumerate(data_loader.validationloader, 0): 
-                idx = data["idx"].cpu().numpy()[0]  
+ 
+                idx = data["idx"].cpu().numpy()   
+
                 inputs, labels = data["image"], data["label"]
                 inputs, labels = inputs.to(device) , labels.to(device)
                 
@@ -79,27 +82,33 @@ def train(  model,
                 labels = labels.reshape(labels.shape[0])
                 
                 outputs = model(inputs)
-                _, predicted = torch.max(outputs.data, 1)
+                #embedding = model.embedding_generator(inputs)
                 
-                data_loader.df.loc[idx,"prediction"] = predicted.cpu().numpy()[0]
-                
- 
-            
+                outputs_probability = F.softmax(outputs).cpu().numpy()  
+                _, predicted = torch.max(outputs.data, 1) 
+
+                data_loader.df.loc[idx,"prediction"] = predicted.cpu().numpy() 
+
+                for k, cl in enumerate(data_loader.classes,0):
+                    data_loader.df.loc[idx,cl + "_probability"] = outputs_probability[:,k]
+
+
             metric_dataframe = metric_history(data_loader.df, 
                             metric_dataframe, 
                             epoch, 
                             metrics_of_interest )
 
             writer.add_metrics(metric_dataframe,metrics_of_interest ,epoch)
-            writer.add_embedding( model, data_loader, epoch, device)
             writer.add_images( data_loader, epoch )
-        
+            writer.add_pr_curve( data_loader, epoch )
         if epoch > 1.5*patience:
             indx = (metric_dataframe["set"] == "validation") & (metric_dataframe["metric"] == criteria )
             validation_criteria = metric_dataframe.loc[indx, "value"]
             if early_stopping(validation_criteria, patience):
                 break
-
+    
+    
+    writer.add_embedding( model, data_loader, epoch, device)
     writer.add_graph(model, data_loader)
     print('Finished Training')
     return  model, metric_dataframe 
