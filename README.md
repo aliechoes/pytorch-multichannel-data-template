@@ -81,5 +81,6 @@ DATETIME_NOW + _  + MODEL + _bs_ + BATCHSIZE
 - [x] add more metrics 
 - [x] add saving models
 - [x] add transfer learning
-- [ ] add data augmentation
+- [x] add data augmentation
 - [x] add early stopping
+- [x] add batch size for faster model evaluation

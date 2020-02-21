@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import os
 import torch
+import random
 import pandas as pd
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
@@ -16,9 +17,10 @@ import glob
 import sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
-from skimage.transform import   rescale, resize 
-from imageio import imread
-from torchvision import transforms
+from skimage.transform import   rescale, resize, rotate
+from imageio import imread 
+from data_loaders.data_sets import Dataset_Generator
+
 
 def finding_classes(data_dir):
     """
@@ -80,9 +82,11 @@ def input_dataframe_generator(classes_dict):
         df_dummy["file"] = range(1, classes_dict[cl])
         df_dummy["label"] = label
         df_dummy["class"] = cl
-        df_dummy["prediction"] = -1
+        df_dummy["prediction"] = -1.
         df = df.append(df_dummy, ignore_index=True)
         label = label + 1
+    for cl in classes_dict:
+        df[cl+"_probability"] = -1.
     return df
 
 def train_validation_test_split(df, validation_size= 0.2 , test_size = 0.3 ,
@@ -104,61 +108,6 @@ def train_validation_test_split(df, validation_size= 0.2 , test_size = 0.3 ,
     if randomize:
         df = shuffle(df)
     return df
-
-
-class Dataset_Generator(Dataset):
-    """Dataset_Generator"""
-
-    def __init__(self,  data_dir,  file_extension, df , channels , set_type , 
-                    reshape_size = 32, mean = None , std = None):
-        """
-        Args:
-            csv_file (string): Path to the csv file with annotations.
-            data_dir (string): Directory with all the images. 
-        """
-        self.df = df.copy().reset_index(drop = True)
-        
-        # just using the set of interest
-        if set_type is not None:
-            self.df = self.df[self.df["set"]==set_type].reset_index(drop = True) 
-        
-        self.data_dir = data_dir 
-        self.file_extension = file_extension
-        self.reshape_size = reshape_size
-        self.channels = channels
-        self.mean = mean
-        self.std = std
-        
-    def __len__(self):
-        return self.df.shape[0]
-
-    def __getitem__(self, idx):
-        
-        if torch.is_tensor(idx):
-            idx = idx.tolist() 
-
-        image = np.zeros((len(self.channels), self.reshape_size, self.reshape_size))
-        #print(("idx", idx))
-        for ch in range(0,len(self.channels) ): 
-            img_name = os.path.join(self.data_dir,self.df.loc[idx,"class"], \
-                                   str(self.df.loc[idx,"file"])  +"_" + \
-                                       self.channels[ch] + self.file_extension)
-            image_dummy = imread(img_name)
-            image_dummy = resize(image_dummy , (self.reshape_size, self.reshape_size) )  
-            image[ch,:,:] = image_dummy
-        
-        image = torch.from_numpy(image) 
-        
-        if self.mean is not None and self.std is not None:
-            image = transforms.Normalize(self.mean,self.std)(image) 
-            
-        label = self.df.loc[idx,"label"]
-        
-        label = np.array([label]) 
-        
-        sample = {'image': image , 'label': torch.from_numpy(label) , "idx":idx }
-        
-        return sample
 
 
 class DataLoaderGenerator():
@@ -243,7 +192,8 @@ class DataLoaderGenerator():
                                             "train" , 
                                             self.reshape_size , 
                                             self.mean, 
-                                            self.std )
+                                            self.std,
+                                            True )
 
         self.trainloader = DataLoader(self.train_dataset, 
                                 batch_size=self.batch_size, \
@@ -257,9 +207,10 @@ class DataLoaderGenerator():
                                             None , 
                                             self.reshape_size , 
                                             self.mean, 
-                                            self.std )
+                                            self.std,
+                                            False )
                                             
         self.validationloader = DataLoader(self.validation_dataset, 
-                                batch_size=1, \
+                                batch_size= self.batch_size, \
                                 shuffle=False, 
-                                num_workers=1)
+                                num_workers=4)
