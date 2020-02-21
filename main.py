@@ -13,8 +13,7 @@ import base64
 import hashlib
 import mimetypes
 import json
-import imageio 
-import json
+import imageio  
 import numpy as np 
 import pandas as pd
 from data_loaders.data_loaders import DataLoaderGenerator
@@ -139,6 +138,9 @@ def main(configs):
                                     call_back,
                                     device)
                                     
+    # save hyperparameters for comparison
+    # writer.add_hparams(metric_dataframe, configs )
+
     # save the dataset with train/validation/test per epoch
     output_folder = os.path.join(tensorboard_path, run_name, "output_files/")
     make_folders(output_folder)

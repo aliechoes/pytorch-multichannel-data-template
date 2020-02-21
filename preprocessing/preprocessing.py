@@ -19,8 +19,9 @@ def segment( file_path,
             image = image*mask
             image = image.astype(np.uint16)
             return image, mask 
-    possible_channels = ["Ch1","Ch2","Ch3","Ch4","Ch5","Ch6","Ch7",
-                            "Ch8","Ch9","Ch10","Ch11","Ch12"]
+
+    possible_channels = ["Ch1.","Ch2.","Ch3.","Ch4.","Ch5.","Ch6.","Ch7.",
+                            "Ch8.","Ch9.","Ch10.","Ch11.","Ch12."]
     for ch in possible_channels:
         if ch in file_path:
             mask = imread(file_path.replace(ch,whole_object_segmentation_channel))
@@ -63,11 +64,11 @@ def add_border(image, desired_size):
   
 
 def main(   images_path, 
-            desired_size = 150, 
-            segmentatable_channels = ["Ch5","Ch6"],
-            whole_object_segmentation_channel = "Ch4" ,
-            existing_extension = ".jpg" ,
-            desired_extension = ".jpg" ):
+            desired_size = 200, 
+            segmentatable_channels = [],
+            whole_object_segmentation_channel = "Ch4." ,
+            existing_extension = ".tiff" ,
+            desired_extension = ".png" ):
     x_min = desired_size
     x_max = 0
     list_of_files = glob.glob(os.path.join(images_path,"*" + existing_extension  ))
@@ -89,7 +90,7 @@ def main(   images_path,
                             np.where(mask.sum(1) > 0)[0][-1]) 
             if to_save:
                 imwrite(f.replace(existing_extension,desired_extension ), 
-                                                        image, 'jpg-PIL')
+                                                        image, 'PNG-PIL')
                 imwrite(f.replace("images", "masks").replace(existing_extension, desired_extension ), 
                                                         mask ) 
         except ValueError as e: 
@@ -104,14 +105,10 @@ def main(   images_path,
  
 if __name__ == '__main__':
     main_path = [
-                "/home/ali/Desktop/synapse_formation_test/images/Minus_SEA_Synapse",
-                "/home/ali/Desktop/synapse_formation_test/images/Minus_SEA_Synapse_Functional",
-                "/home/ali/Desktop/synapse_formation_test/images/Minus_SEA_Synapse_Maybe",
-                "/home/ali/Desktop/synapse_formation_test/images/No_Cell_Cell_Interaction",
-                "/home/ali/Desktop/synapse_formation_test/images/Plus_SEA_Synapse",
-                "/home/ali/Desktop/synapse_formation_test/images/Plus_SEA_Synapse_Functional",
-                "/home/ali/Desktop/synapse_formation_test/images/Plus_SEA_Synapse_Maybe"]
-    desired_size = 150
+                "/pstore/home/shetabs1/data/aggregation_bodies/raw/experiment_7/images/7_a_host/" ,
+                "/pstore/home/shetabs1/data/aggregation_bodies/raw/experiment_7/images/7_b_CD19cd28/" ,
+                "/pstore/home/shetabs1/data/aggregation_bodies/raw/experiment_7/images/7_c_FAPcd137/" ] 
+    desired_size = 200
     x_min = desired_size
     x_max = 0
     for mp in main_path:
