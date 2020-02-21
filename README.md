@@ -72,15 +72,16 @@ DATETIME_NOW + _  + MODEL + _bs_ + BATCHSIZE
 
 ## TODO
 
-- [ ] add documentation
+- [x] add documentation
 - [ ] add GRAD-CAM
 - [x] add tensorboard 
 - [ ] add config tracker in tensorboard
-- [ ] add pr-cruve
+- [x] add pr-cruve
 - [ ] add saving matplotlib saving using tensorboard
 - [x] add more metrics 
 - [x] add saving models
 - [x] add transfer learning
 - [x] add data augmentation
 - [x] add early stopping
+- [ ] add feature extration
 - [x] add batch size for faster model evaluation
