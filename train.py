@@ -69,7 +69,9 @@ def train(  model,
                 'epoch': epoch + 1,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
-                'loss': loss 
+                'loss': loss ,
+                'mean': data_loader.mean,
+                'std': data_loader.std
             }, model_path)  
 
         with torch.no_grad():  

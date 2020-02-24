@@ -83,5 +83,5 @@ DATETIME_NOW + _  + MODEL + _bs_ + BATCHSIZE
 - [x] add transfer learning
 - [x] add data augmentation
 - [x] add early stopping
-- [ ] add feature extration
+- [x] add feature extration
 - [x] add batch size for faster model evaluation
