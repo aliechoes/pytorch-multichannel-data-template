@@ -1,14 +1,15 @@
 {
-    "data_dir": "/pstore/home/shetabs1/data/aggregation_bodies/raw/experiment_7/images/",
-    "batch_size": 256,
+    "data_dir": "/home/ali/code/pytorch-multichannel-data-template/sample_data/mnist/",
+    "batch_size": 64,
     "validation_split": 0.3,
+    "data_map": "map_zero_one",
     "test_split": 0.3,
-    "tensorboard_path": "/pstore/home/shetabs1/runs/aggregation_bodies/",
+    "tensorboard_path": "/home/ali/code/runs/mnist/",
     "file_extension": ".png",
     "checkpoint_path": null,
-    "model_name": "AlexNet",
-    "num_epochs": 1000,
-    "device": "cuda",
+    "model_name": "ShallowNet",
+    "num_epochs": 100,
+    "device": "cpu",
     "optimization_parameters": {
       "lr": 0.001,
       "weight_decay": 0.1
@@ -17,8 +18,8 @@
     "loss_function": "nll_loss",
     "metrics_of_interest": ["accuracy", "dice"],
     "call_back": {
-      "saving_period": 20,
-      "patience":10,
+      "saving_period": 10,
+      "patience":100,
       "criteria": "accuracy"
     }
   }
