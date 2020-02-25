@@ -100,6 +100,7 @@ def train(  model,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': loss ,
+                'channels': data_loader.existing_channels,
                 'statistics': data_loader.statistics,
                 'data_map': data_loader.data_map
             }, model_path)  
