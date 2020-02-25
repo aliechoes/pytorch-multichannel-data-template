@@ -14,6 +14,7 @@ For using this code, you need to use the config file following information:
 * `data_dir` : directory of the images in their corresponding folders (each folder is a class) (format: str)
 * `batch_size`:  Batch size
 * `validation_split`: percentage of train-validation split
+* `data_map`: the map which can be used for mapping data from one range to another. In case `null` is passed, no transformation will be done on the data. At the moment, possible options are: `normalize`, `map_zero_one` and `map_minus_one_to_one`
 * `test_split`: percentage of test vs train-validation split
 * `tensorboard_path`: path to save tensorboard as well as other outputs
 * `file_extension`: file extension which exists in the data, for example `.png`
@@ -34,7 +35,7 @@ For using this code, you need to use the config file following information:
 
 ## Running the Code
 
-For running this code, it is enough to just pass the config file and run the [main.py](main.py):
+For running this code, it is enough to just pass the config file and run the [main.py](main.py). For testing whether the code works or not, you can use the folder [sample_data](sample_data) which includes MNIST dataset with two channels (the second channel is artificially created)
 
 ```bash
 python main.py --config ./configs/sample_config.json
