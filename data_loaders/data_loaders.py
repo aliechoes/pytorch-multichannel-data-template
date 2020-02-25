@@ -153,30 +153,32 @@ class DataLoaderGenerator():
                                             self.existing_channels , 
                                             "train" , 
                                             self.reshape_size )
-
+        
         trainloader = DataLoader(   train_dataset, \
                                     batch_size=self.batch_size, \
-                                    shuffle=False, num_workers=4)
+                                    shuffle=False, num_workers=1) 
 
-        mean = 0.
-        std = 0.
-        nb_samples = 0.
+        numer_of_channels = len(self.existing_channels)                       
+        self.mean = torch.zeros(numer_of_channels)
+        self.std = torch.zeros(numer_of_channels)
+        self.min = torch.zeros(numer_of_channels) + 1000000
+        self.max = torch.zeros(numer_of_channels)
+        
+        for data in trainloader: 
+            data = data["image"] 
+            for i in range(numer_of_channels):
+                self.mean[i] += data[:,i,:,:].mean()
+                self.std[i] += data[:,i,:,:].std()
+                self.min[i] = min(data[:,i,:,:].min(), self.min[i]    )
+                self.max[i] = max(data[:,i,:,:].max(), self.max[i]    )
 
-        for data in trainloader:
-            batch_samples = data["image"].size(0)
-            data = data["image"].view(batch_samples, data["image"].size(1), -1)
-            
-            mean += data.mean(2).sum(0)
-            std += data.std(2).sum(0)
-            nb_samples += batch_samples
-            
-        train_dataset = None
-        trainloader = None
 
-        mean /= nb_samples
-        std /= nb_samples
-        self.mean = mean
-        self.std = std
+        self.mean.div_(len(trainloader))
+        self.std.div_(len(trainloader))
+        print(self.mean)
+        print(self.std)
+        print(self.min)
+        print(self.max) 
 
     def data_loader(self, reshape_size):
 
@@ -198,7 +200,7 @@ class DataLoaderGenerator():
         self.trainloader = DataLoader(self.train_dataset, 
                                 batch_size=self.batch_size, \
                                 shuffle=True, 
-                                num_workers=4)
+                                num_workers=1)
 
         self.validation_dataset = Dataset_Generator(self.data_dir,  
                                             self.file_extension, 
@@ -213,4 +215,4 @@ class DataLoaderGenerator():
         self.validationloader = DataLoader(self.validation_dataset, 
                                 batch_size= self.batch_size, \
                                 shuffle=False, 
-                                num_workers=4)
+                                num_workers=1)

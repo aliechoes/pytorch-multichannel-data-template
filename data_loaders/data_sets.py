@@ -19,7 +19,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 from skimage.transform import   rescale, resize, rotate
 from imageio import imread 
-from data_loaders.data_augmentation import random_crop, random_rotation, random_flip
 import numpy as np
 from numpy import fliplr, flipud
 from skimage import data
@@ -62,7 +61,7 @@ class Dataset_Generator(Dataset):
     """Dataset_Generator"""
 
     def __init__(self,  data_dir,  file_extension, df , channels , set_type ,
-                    reshape_size = 32, mean = None , std = None, augmentation = False):
+                    reshape_size = 64, mean = None , std = None, augmentation = False):
         """
         Args:
             csv_file (string): Path to the csv file with annotations.
@@ -94,25 +93,27 @@ class Dataset_Generator(Dataset):
                                    str(self.df.loc[idx,"file"])  +"_" + \
                                        self.channels[0] + self.file_extension)
         image = imread(image_path)
-        image = np.zeros((image.shape[0], image.shape[1], len(self.channels)))
+        image = np.zeros((image.shape[0], image.shape[1], len(self.channels)), dtype = np.float64)
 
         for ch in range(0,len(self.channels) ): 
             img_name = os.path.join(self.data_dir,self.df.loc[idx,"class"], \
                                    str(self.df.loc[idx,"file"])  +"_" + \
                                        self.channels[ch] + self.file_extension)
-            image_dummy = imread(img_name) 
+                                       
+            image_dummy = imread(img_name).astype(np.float64)
             image[:,:,ch] = image_dummy
-        
-        image = random_crop(image) 
-        image = resize(image_dummy , (self.reshape_size, self.reshape_size, len(self.channels)) ) 
-
+            
         if self.augmentation:
+            if np.random.random() > 0.5:
+                image = random_crop(image) 
             if np.random.random() > 0.5: 
                 image = random_rotation(image) 
             image = random_flip(image)
+        
+        image = resize(image , (self.reshape_size, self.reshape_size, len(self.channels)) ) 
 
         image = image.transpose(2,0,1)
-        image = torch.from_numpy(np.flip(image,axis=0).copy() )
+        image = torch.from_numpy(np.flip(image,axis=0).copy() ) 
         
         if self.mean is not None and self.std is not None:
             image = transforms.Normalize(self.mean,self.std)(image) 
