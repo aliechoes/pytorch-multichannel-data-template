@@ -6,12 +6,20 @@ from machine_learning.metrics import metric_history
 import time
 import os
 
+def elapsed_time_print(start_time, message):
+    elapsed_time = time.time() - start_time
+    elapsed_time = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
+    print(4*"*")
+    print(message % elapsed_time)
+    print(4*"*")
+    return None
+
 def early_stopping(validation_criteria, patience):
     n0 = len(validation_criteria) - patience 
     n1 = len(validation_criteria) + 1 
     validation_difference = validation_criteria.iloc[n0:n1] - \
                                     validation_criteria.iloc[n0] 
-    print(validation_difference > 0.)
+                                    
     model_is_improved = (validation_difference > 0.).sum()
     if model_is_improved > 0:
         return False
@@ -35,8 +43,9 @@ def train(  model,
     criteria = call_back["criteria"]
 
     for epoch in range(num_epochs):  # loop over the dataset multiple times
-
+        print("EPOCH: %d" % epoch)
         running_loss = 0.0
+        start_time = time.time()
         for i, data in enumerate(data_loader.trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
             
@@ -62,8 +71,11 @@ def train(  model,
             if i % 5 == 4:
                 print('[epoch: %d, minibatch %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 5))
                 running_loss = 0.0
+        elapsed_time_print(start_time, "Training took %s")
+
 
         if  epoch % saving_period == (saving_period - 1):
+            start_time = time.time()
             model_path = os.path.join(model_folder, "epoch_" + str(epoch + 1) + ".pth" )
             torch.save({
                 'epoch': epoch + 1,
@@ -73,9 +85,10 @@ def train(  model,
                 'mean': data_loader.mean,
                 'std': data_loader.std
             }, model_path)  
+            elapsed_time_print(start_time, "Saving Model took %s")
 
         with torch.no_grad():  
-            
+            start_time = time.time()
             for i, data in enumerate(data_loader.validationloader, 0): 
  
                 idx = data["idx"].cpu().numpy()   
@@ -106,6 +119,8 @@ def train(  model,
             writer.add_metrics(metric_dataframe,metrics_of_interest ,epoch)
             writer.add_images( data_loader, epoch )
             writer.add_pr_curve( data_loader, epoch )
+
+        elapsed_time_print(start_time, "Evaluating Model took %s")
         if epoch > 1.5*patience:
             indx =  (metric_dataframe["set"] == "validation") & \
                         (metric_dataframe["metric"] == criteria )
