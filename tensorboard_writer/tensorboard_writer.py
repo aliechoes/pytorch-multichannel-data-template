@@ -58,17 +58,20 @@ def plot_classes_preds(net, images, labels):
     return fig
 
 class TensorBoardSummaryWriter(object):
+    """
+    Class for writing different outputs to TensorBoard
+    """
     def __init__(self, output_path ):
         self.writer = SummaryWriter(output_path )
-    
-    def add_loss(self,loss_type, loss_value, x_value):
-         
-        self.writer.add_scalar(loss_type ,
-                     loss_value,
-                     x_value)
-        self.writer.close()
 
     def add_metrics(self,df, metrics_of_interest,epoch):
+        """
+        Add metrics to tensorboard the scalars part.
+        Args:
+            df(pandas dataframe): dataframe with all the recorded metrics per epoch
+            metrics_of_interest(str): the metric which should be written in tensorboard
+            epoch(int): epoch
+        """
         for mt in metrics_of_interest:
             results = dict()
             for s in ["train","validation","test"]:
@@ -82,6 +85,13 @@ class TensorBoardSummaryWriter(object):
         self.writer.close()
         
     def add_images(self,  data_loader, epoch ):
+        """
+        Add images to tensorboard the scalars part. It outputs each channel and uses 
+        one image per class for each channel
+        Args:
+            data_loader: data loader from pytorch 
+            epoch(int): epoch
+        """
    
         idx = data_loader.df.groupby('class')['class'].apply(lambda s: s.sample(1))
         idx = idx.index 
@@ -103,6 +113,12 @@ class TensorBoardSummaryWriter(object):
         
 
     def add_graph(self, model, data_loader ):
+        """
+        Add the model to tensorboard. It shows the model architecture
+        Args:
+            data_loader: data loader from pytorch 
+           model: pytorch model
+        """
         images, _ = select_n_random(data_loader.train_dataset )
         images = images.float() 
 
@@ -110,6 +126,14 @@ class TensorBoardSummaryWriter(object):
         self.writer.close()
     
     def add_embedding(self, model, data_loader, epoch, device):
+        """
+        gets the model and outpus n random images features to tensorboard projector
+        Args:
+            data_loader: data loader from pytorch 
+            model: pytorch model
+            epoch(int)
+            device(str): either cpu or cuda
+        """
         images, labels = select_n_random(data_loader.train_dataset )
         labels = labels.cpu()
         images = images.to(device)
@@ -151,6 +175,12 @@ class TensorBoardSummaryWriter(object):
         self.writer.close()
     
     def add_pr_curve(self, data_loader, epoch):
+        """
+        outpurs the precision recall curve per class per epoch
+        Args:
+            data_loader: data loader from pytorch 
+            model: pytorch model
+        """
         validation_index = data_loader.df["set"] == "validation"
         df_validation =  data_loader.df[validation_index].copy()
 

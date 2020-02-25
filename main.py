@@ -81,7 +81,6 @@ def main(configs):
     run_name = str(datetime.now()) + "_" + \
                     model_name + "_bs_" + str(batch_size)
                          
-    
     # creating the tensorboard
     writer = TensorBoardSummaryWriter( os.path.join(tensorboard_path, run_name ) )
 

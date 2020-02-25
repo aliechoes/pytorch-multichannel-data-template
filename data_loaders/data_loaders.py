@@ -107,6 +107,17 @@ def train_validation_test_split(df, validation_size= 0.2 , test_size = 0.3 ,
 
 
 class DataLoaderGenerator():
+    """
+    data loader python generator.It is the main
+    Args:
+        data_dir(str): data directory 
+        batch_size(int): batch size
+        validation_split(float): size of data for validatoin. should be between 0 & 1
+        test_split(float): size of data for test. should be between 0 & 1
+        data_map(str): the mapping type for data (per pixel)
+
+    """
+
     def __init__(self, data_dir, batch_size, validation_split, test_split, data_map):
         self.data_dir = data_dir  
         self.batch_size = batch_size
@@ -115,7 +126,17 @@ class DataLoaderGenerator():
         self.data_map = data_map
         
     def data_frame_creator(self):
-        
+        """
+        datafame including every file, which later will be used for reading the images.
+        the structure is like this:
+        file	        label	class	    prediction  set
+        file1_Chx.ext	0	    class_0 	0	        test
+        file2_Chx.ext	1	    class_1 	0	        train
+        file3_Chx.ext	0	    class_0 	0	        validation
+        .               .       .           .           .
+        .               .       .           .           .
+        .               .       .           .           .
+        """
         self.classes = finding_classes(self.data_dir)
         self.existing_channels = finding_channels(  self.classes, 
                                                     self.data_dir)
@@ -138,8 +159,9 @@ class DataLoaderGenerator():
 
     def calculate_statistics(self):
         """
-        This functions creates the trainloader and calulates the mean
-        and standard deviation for the training set
+        This functions creates the trainloader and calulates the statistics of
+        the training set. It includes min, lower_bound, mean, std, upper_bound and 
+        max values per channel
         """
                 
         train_dataset = Dataset_Generator(  self.data_dir,  
@@ -181,7 +203,16 @@ class DataLoaderGenerator():
             print(k,self.statistics[k])
 
     def data_loader(self, reshape_size):
-
+        """
+        This functions first calculates the statistics of the training dataset.
+        then creates two dataset and corresponding data loader
+        Args:
+            reshape_size(int): size of the input image for the network
+        datasets:
+            train_dataset: only dataset including the training data
+            validation_dataset: dataset including the whole data. But splitted in
+                                train, validation and test
+        """
         self.reshape_size = reshape_size
         print("Starting to calculate the statistics...")
         self.calculate_statistics()

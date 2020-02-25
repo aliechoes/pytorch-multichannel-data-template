@@ -37,7 +37,25 @@ def train(  model,
             model_folder,
             call_back,
             device = 'cpu'):
-    
+    """
+    the function which trains the model and evaluates it over the whole dataset
+    Args:
+        model: architecture   
+        data_loader: dataloader including the train and validation loader
+        optimizer: the selected method
+        criterion: loss function
+        metric_dataframe: dataframe for tracking the progress of the network per epoch    
+        metrics_of_interest: list of metrics which we would like to track
+        num_epochs: number of epochs
+        writer: tensorboard writer 
+        model_folder: folder to save the models per epoch
+        call_back: 
+            saving_period(int): period of saving models
+            patience(int): period of checking whether the training should stop
+            criteria(str): the metric to track for early stopping
+        device(str): either cpu or cuda
+    """
+
     saving_period = call_back["saving_period"]
     patience = call_back["patience"]
     criteria = call_back["criteria"]
