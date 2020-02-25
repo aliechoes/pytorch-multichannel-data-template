@@ -2,14 +2,18 @@
 
 In this repository, you can find PyTorch based image classification code which can be used for data with any number of channels. This is in general important as some applications such as satellite imagery or biomedical imaging can contain more than 3 channels of information.
 
-## Folder Structure
+## Folders
 
-To Be Updated...
+* [configs](configs): includes the config files
+* [data_loaders](data_loaders): includes the dataset and dataloders
+* [sample_data](sample_data): example of MNIST for running the code
+* [preprocessing](preprocessing): includes the preprocessing methods
+* [machine_learning](machine_learning): includes the models, metrics, losses as well as the optimizers.
+* [tensorboard_writer](tensorboard_writer): includes the methods for tensorboard as well as saving results
 
 ## Input parameters
 
 For using this code, you need to use the config file following information:
-
  
 * `data_dir` : directory of the images in their corresponding folders (each folder is a class) (format: str)
 * `batch_size`:  Batch size
@@ -41,8 +45,6 @@ For running this code, it is enough to just pass the config file and run the [ma
 python main.py --config ./configs/sample_config.json
 ```
 
-.. TO BE UPDATED
-
 ## Libraries
 
 This code is based on these libraries:
@@ -55,7 +57,6 @@ This code is based on these libraries:
 * `skimage=='0.16.2'`
 * `pillow=='6.2.0'`
 
-
 ## Naming Convention
 
 Each run is named using multiple conditions to be able to distinguish their results. The naming is based on:
@@ -63,13 +64,6 @@ Each run is named using multiple conditions to be able to distinguish their resu
 ```
 DATETIME_NOW + _  + MODEL + _bs_ + BATCHSIZE
 ```
-
-## Folders
-
-* [configs](configs): includes the config files
-* [inputs](inputs): includes the preprocessing models as well as the data loader
-* [machine_learning](machine_learning): includes the models, metrics, losses as well as the optimizers.
-* [outputs](outputs): includes the methods for tensorboard as well as saving results
 
 ## TODO
 
