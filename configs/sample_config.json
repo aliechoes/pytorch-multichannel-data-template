@@ -5,7 +5,6 @@
     "data_map": "normalize",
     "test_split": 0.3,
     "tensorboard_path": "/home/ali/code/runs/mnist/",
-    "file_extension": ".jpg",
     "checkpoint_path": null,
     "model_name": "ShallowNet",
     "num_epochs": 100,
@@ -19,7 +18,7 @@
     "metrics_of_interest": ["accuracy", "dice"],
     "call_back": {
       "saving_period": 10,
-      "patience":100,
+      "patience":20,
       "criteria": "accuracy"
     }
   }

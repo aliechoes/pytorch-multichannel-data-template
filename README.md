@@ -74,6 +74,7 @@ DATETIME_NOW + _  + MODEL + _bs_ + BATCHSIZE
 ## TODO
 
 - [x] add documentation
+- [x] update the dataloader to be able to get different file formats
 - [ ] add GRAD-CAM 
 - [x] add tensorboard 
 - [ ] add config tracker in tensorboard

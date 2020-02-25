@@ -63,7 +63,6 @@ def main(configs):
     validation_split = configs["validation_split"]
     test_split = configs["test_split"]
     tensorboard_path = configs["tensorboard_path"]
-    file_extension = configs["file_extension"]
     checkpoint_path = configs["checkpoint_path"]
     data_map = configs["data_map"]
     model_name = configs["model_name"]
@@ -93,7 +92,6 @@ def main(configs):
     
     # creating the dataloader
     data_loader = DataLoaderGenerator(  data_dir,  
-                                        file_extension,  
                                         batch_size, 
                                         validation_split, 
                                         test_split,

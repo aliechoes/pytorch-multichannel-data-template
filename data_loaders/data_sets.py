@@ -105,7 +105,7 @@ def data_mapping(image, statistics, method):
 class Dataset_Generator(Dataset):
     """Dataset_Generator"""
 
-    def __init__(self,  data_dir,  file_extension, df , channels , set_type ,
+    def __init__(self,  data_dir,    df , channels , set_type ,
                     reshape_size = 64, data_map = None, statistics = None , augmentation = False):
         """
         Args:
@@ -119,7 +119,6 @@ class Dataset_Generator(Dataset):
             self.df = self.df[self.df["set"]==set_type].reset_index(drop = True) 
         
         self.data_dir = data_dir 
-        self.file_extension = file_extension
         self.reshape_size = reshape_size
         self.channels = channels
         self.statistics = statistics 
@@ -134,17 +133,13 @@ class Dataset_Generator(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist() 
 
-        image_path = os.path.join(self.data_dir,self.df.loc[idx,"class"], \
-                                   str(self.df.loc[idx,"file"])  +"_" + \
-                                       self.channels[0] + self.file_extension)
+        image_path = str(self.df.loc[idx,"file"])
+
         image = imread(image_path)
         image = np.zeros((image.shape[0], image.shape[1], len(self.channels)), dtype = np.float64)
 
         for ch in range(0,len(self.channels) ): 
-            img_name = os.path.join(self.data_dir,self.df.loc[idx,"class"], \
-                                   str(self.df.loc[idx,"file"])  +"_" + \
-                                       self.channels[ch] + self.file_extension)
-                                       
+            img_name = str(self.df.loc[idx,"file"]).replace(self.channels[0], self.channels[ch])                      
             image_dummy = imread(img_name).astype(np.float64)
             image[:,:,ch] = image_dummy
             

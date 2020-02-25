@@ -31,8 +31,7 @@ def finding_classes(data_dir):
     print(classes)
     return classes
 
-def finding_channels(   classes, data_dir, 
-                        file_prefix = "" , file_extension = ".png"):
+def finding_channels(   classes, data_dir):
     """
     this function finds the existing channels in the folder and returns
     a list of them
@@ -42,16 +41,14 @@ def finding_channels(   classes, data_dir,
                                "Ch13", "Ch14", "Ch15", "Ch16", "Ch17", "Ch18"]
     existing_channels = []
     for ch in channels:
-        cl_path = os.path.join(data_dir, classes[0], file_prefix +  "*_" + \
-            ch + file_extension)
+        cl_path = os.path.join(data_dir, classes[0], "*_" +  ch + "*")
         cl_files = glob.glob(cl_path)
         if len(cl_files)> 1:
             existing_channels.append(ch)
     return existing_channels
         
         
-def number_of_files_per_class(classes, data_dir, existing_channels,
-                        file_prefix = "" ,file_extension = ".png" ):
+def number_of_files_per_class(classes, data_dir, existing_channels ):
     """
     this function finds the number of files in each folder. it is important
     as with this, we can call all the files. In Amnis, each experiment
@@ -61,15 +58,14 @@ def number_of_files_per_class(classes, data_dir, existing_channels,
     """
     results = dict()
     for cl in classes:
-        cl_path = os.path.join(data_dir, cl, "*" + file_extension) 
+        cl_path = os.path.join(data_dir, cl, "*") 
         cl_files = glob.glob(cl_path) 
-
         results[cl] = int(float(len(cl_files))/float(len(existing_channels)))
     return results
     
     
     
-def input_dataframe_generator(classes_dict):
+def input_dataframe_generator(data_dir, classes_dict, representing_channel):
     """
     This functions gets the dictionary with the classes and number of files 
     per class and gives back a dataframe with these columns
@@ -79,7 +75,7 @@ def input_dataframe_generator(classes_dict):
     df = pd.DataFrame(columns= ["file"  ,"label", "class", "prediction"] )
     for cl in classes_dict:
         df_dummy = pd.DataFrame(columns= ["file" ,"label", "class", "prediction"]  )
-        df_dummy["file"] = range(1, classes_dict[cl])
+        df_dummy["file"] = glob.glob(os.path.join(data_dir, cl, "*_" + representing_channel + "*") ) 
         df_dummy["label"] = label
         df_dummy["class"] = cl
         df_dummy["prediction"] = -1.
@@ -111,10 +107,8 @@ def train_validation_test_split(df, validation_size= 0.2 , test_size = 0.3 ,
 
 
 class DataLoaderGenerator():
-    def __init__(self, data_dir,   file_extension ,
-                                batch_size, validation_split, test_split, data_map):
+    def __init__(self, data_dir, batch_size, validation_split, test_split, data_map):
         self.data_dir = data_dir  
-        self.file_extension = file_extension
         self.batch_size = batch_size
         self.validation_split = validation_split
         self.test_split = test_split
@@ -124,19 +118,18 @@ class DataLoaderGenerator():
         
         self.classes = finding_classes(self.data_dir)
         self.existing_channels = finding_channels(  self.classes, 
-                                                    self.data_dir,
-                                                    "",
-                                                    self.file_extension)
+                                                    self.data_dir)
 
-        self.nb_per_class = number_of_files_per_class(  self.classes, \
-                                                        self.data_dir, \
-                                                        self.existing_channels,
-                                                        "",
-                                                        self.file_extension)
+        self.nb_per_class = number_of_files_per_class(  self.classes, 
+                                                        self.data_dir, 
+                                                        self.existing_channels)
         print("detected files per class")
         print(self.nb_per_class)
 
-        self.df = input_dataframe_generator(self.nb_per_class)
+        self.df = input_dataframe_generator(self.data_dir, 
+                                            self.nb_per_class,
+                                            self.existing_channels[0])
+
         self.df = train_validation_test_split(  self.df, 
                                                 self.validation_split , 
                                                 self.test_split ,
@@ -150,7 +143,6 @@ class DataLoaderGenerator():
         """
                 
         train_dataset = Dataset_Generator(  self.data_dir,  
-                                            self.file_extension, 
                                             self.df , 
                                             self.existing_channels , 
                                             "train" , 
@@ -158,7 +150,7 @@ class DataLoaderGenerator():
         
         trainloader = DataLoader(   train_dataset, \
                                     batch_size=self.batch_size, \
-                                    shuffle=False, num_workers=1) 
+                                    shuffle=True, num_workers=1) 
 
         numer_of_channels = len(self.existing_channels)    
 
@@ -180,8 +172,6 @@ class DataLoaderGenerator():
                 self.statistics["upper_bound"][i] += np.quantile( data[:,i,:,:], .98) 
                 self.statistics["max"][i] = max(data[:,i,:,:].max(), self.statistics["max"][i]    )
 
-
-        print(k)
         self.statistics["lower_bound"] = self.statistics["lower_bound"] / float(k)
         self.statistics["mean"].div_(len(trainloader))
         self.statistics["std"].div_(len(trainloader))
@@ -198,7 +188,6 @@ class DataLoaderGenerator():
         print("Calculating the statistics is finished")
 
         self.train_dataset = Dataset_Generator(self.data_dir,  
-                                            self.file_extension, 
                                             self.df , 
                                             self.existing_channels ,  
                                             "train" , 
@@ -213,7 +202,6 @@ class DataLoaderGenerator():
                                 num_workers=1)
                                 
         self.validation_dataset = Dataset_Generator(self.data_dir,  
-                                            self.file_extension, 
                                             self.df , 
                                             self.existing_channels ,  
                                             None , 
