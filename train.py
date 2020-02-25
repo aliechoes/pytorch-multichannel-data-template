@@ -82,8 +82,8 @@ def train(  model,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': loss ,
-                'mean': data_loader.mean,
-                'std': data_loader.std
+                'statistics': data_loader.statistics,
+                'data_map': data_loader.data_map
             }, model_path)  
             elapsed_time_print(start_time, "Saving Model took %s")
 

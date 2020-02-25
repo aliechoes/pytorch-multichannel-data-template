@@ -45,7 +45,6 @@ def random_rotation(image ):
 def random_flip(image ):
     # pick a random degree of rotation between 25% on the left and 25% on the right
     random_number = np.random.random()
-    
     if  random_number < 0.25: 
         return image
     elif random_number >= 0.25 and random_number < 0.50:
@@ -55,13 +54,59 @@ def random_flip(image ):
     else: 
         return flipud(fliplr(image))
 
+def data_augmentation(image):
+    if np.random.random() > 0.5:
+        image = random_crop(image) 
+    if np.random.random() > 0.5: 
+        image = random_rotation(image) 
+    image = random_flip(image)
+    return image
+
+
+def map_zero_one(x, a, b):
+    s = 1./(b - a)
+    t = a/(a-b)
+    y = s*x + t
+    y[y>1] = 1
+    y[y<0] = 0
+    return y
+
+def map_minus_one_to_one(x, a, b):
+    s = 2./(b - a)
+    t = (a+b)/(a-b)
+    y = s*x + t
+    y[y>1] = 1
+    y[y<-1] = -1
+    return y
+
+def data_mapping(image, statistics, method):
+    if method == "normalize":
+        image = transforms.Normalize(statistics["mean"] , statistics["std"] )(image) 
+
+    elif method == "map_zero_one":
+        for ch in range(image.shape[0]):
+            a = statistics["lower_bound"][ch]
+            b = statistics["upper_bound"][ch]
+            image[ch,:,:] = map_zero_one(image[ch,:,:], a, b)
+    elif method == "map_minus_one_to_one":
+        for ch in range(image.shape[0]):
+            a = statistics["lower_bound"][ch]
+            b = statistics["upper_bound"][ch]
+            image[ch,:,:] = map_minus_one_to_one(image[ch,:,:], a, b)
+    else:
+        raise Exception('Wrong mapping function')
+    return image
+
+
+
+
 
 
 class Dataset_Generator(Dataset):
     """Dataset_Generator"""
 
     def __init__(self,  data_dir,  file_extension, df , channels , set_type ,
-                    reshape_size = 64, mean = None , std = None, augmentation = False):
+                    reshape_size = 64, data_map = None, statistics = None , augmentation = False):
         """
         Args:
             csv_file (string): Path to the csv file with annotations.
@@ -77,8 +122,8 @@ class Dataset_Generator(Dataset):
         self.file_extension = file_extension
         self.reshape_size = reshape_size
         self.channels = channels
-        self.mean = mean
-        self.std = std
+        self.statistics = statistics 
+        self.data_map = data_map
         self.augmentation = augmentation
         
     def __len__(self):
@@ -104,19 +149,15 @@ class Dataset_Generator(Dataset):
             image[:,:,ch] = image_dummy
             
         if self.augmentation:
-            if np.random.random() > 0.5:
-                image = random_crop(image) 
-            if np.random.random() > 0.5: 
-                image = random_rotation(image) 
-            image = random_flip(image)
+            image = data_augmentation(image)
         
         image = resize(image , (self.reshape_size, self.reshape_size, len(self.channels)) ) 
 
         image = image.transpose(2,0,1)
         image = torch.from_numpy(np.flip(image,axis=0).copy() ) 
         
-        if self.mean is not None and self.std is not None:
-            image = transforms.Normalize(self.mean,self.std)(image) 
+        if self.data_map is not None:
+            image = data_mapping(image, self.statistics, self.data_map)
             
         label = self.df.loc[idx,"label"]
         

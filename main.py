@@ -65,7 +65,7 @@ def main(configs):
     tensorboard_path = configs["tensorboard_path"]
     file_extension = configs["file_extension"]
     checkpoint_path = configs["checkpoint_path"]
-
+    data_map = configs["data_map"]
     model_name = configs["model_name"]
     num_epochs = configs["num_epochs"]
     device = configs["device"]
@@ -96,7 +96,8 @@ def main(configs):
                                         file_extension,  
                                         batch_size, 
                                         validation_split, 
-                                        test_split) 
+                                        test_split,
+                                        data_map) 
     data_loader.data_frame_creator()
     
     # number of exsting channels and output classes

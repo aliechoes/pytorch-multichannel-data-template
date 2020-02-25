@@ -112,12 +112,13 @@ def train_validation_test_split(df, validation_size= 0.2 , test_size = 0.3 ,
 
 class DataLoaderGenerator():
     def __init__(self, data_dir,   file_extension ,
-                                batch_size, validation_split, test_split):
+                                batch_size, validation_split, test_split, data_map):
         self.data_dir = data_dir  
         self.file_extension = file_extension
         self.batch_size = batch_size
         self.validation_split = validation_split
         self.test_split = test_split
+        self.data_map = data_map
         
     def data_frame_creator(self):
         
@@ -147,6 +148,7 @@ class DataLoaderGenerator():
         This functions creates the trainloader and calulates the mean
         and standard deviation for the training set
         """
+                
         train_dataset = Dataset_Generator(  self.data_dir,  
                                             self.file_extension, 
                                             self.df , 
@@ -158,27 +160,35 @@ class DataLoaderGenerator():
                                     batch_size=self.batch_size, \
                                     shuffle=False, num_workers=1) 
 
-        numer_of_channels = len(self.existing_channels)                       
-        self.mean = torch.zeros(numer_of_channels)
-        self.std = torch.zeros(numer_of_channels)
-        self.min = torch.zeros(numer_of_channels) + 1000000
-        self.max = torch.zeros(numer_of_channels)
+        numer_of_channels = len(self.existing_channels)    
+
+        self.statistics = dict()                   
+        self.statistics["min"] = torch.zeros(numer_of_channels) + np.power(2,16) # 16-bit images
+        self.statistics["lower_bound"] = torch.zeros(numer_of_channels)
+        self.statistics["mean"] = torch.zeros(numer_of_channels)
+        self.statistics["std"] = torch.zeros(numer_of_channels)
+        self.statistics["upper_bound"] = torch.zeros(numer_of_channels)
+        self.statistics["max"] = torch.zeros(numer_of_channels)
+
         
         for data in trainloader: 
             data = data["image"] 
             for i in range(numer_of_channels):
-                self.mean[i] += data[:,i,:,:].mean()
-                self.std[i] += data[:,i,:,:].std()
-                self.min[i] = min(data[:,i,:,:].min(), self.min[i]    )
-                self.max[i] = max(data[:,i,:,:].max(), self.max[i]    )
+                self.statistics["min"][i] = min(data[:,i,:,:].min(), self.statistics["min"][i]   )
+                self.statistics["lower_bound"][i] += np.quantile( data[:,i,:,:], .1) 
+                self.statistics["mean"][i] += data[:,i,:,:].mean()
+                self.statistics["std"][i] += data[:,i,:,:].std()
+                self.statistics["upper_bound"][i] += np.quantile( data[:,i,:,:], .90) 
+                self.statistics["max"][i] = max(data[:,i,:,:].max(), self.statistics["max"][i]    )
 
 
-        self.mean.div_(len(trainloader))
-        self.std.div_(len(trainloader))
-        print(self.mean)
-        print(self.std)
-        print(self.min)
-        print(self.max) 
+        
+        self.statistics["lower_bound"].div_(len(trainloader))
+        self.statistics["mean"].div_(len(trainloader))
+        self.statistics["std"].div_(len(trainloader))
+        self.statistics["upper_bound"].div_(len(trainloader))
+        for k in self.statistics:
+            print(k,self.statistics[k])
 
     def data_loader(self, reshape_size):
 
@@ -186,30 +196,30 @@ class DataLoaderGenerator():
         print("Starting to calculate the statistics...")
         self.calculate_statistics()
         print("Calculating the statistics is finished")
-        
+
         self.train_dataset = Dataset_Generator(self.data_dir,  
                                             self.file_extension, 
                                             self.df , 
                                             self.existing_channels ,  
                                             "train" , 
                                             self.reshape_size , 
-                                            self.mean, 
-                                            self.std,
+                                            self.data_map, 
+                                            self.statistics,
                                             True )
 
         self.trainloader = DataLoader(self.train_dataset, 
                                 batch_size=self.batch_size, \
                                 shuffle=True, 
                                 num_workers=1)
-
+                                
         self.validation_dataset = Dataset_Generator(self.data_dir,  
                                             self.file_extension, 
                                             self.df , 
                                             self.existing_channels ,  
                                             None , 
                                             self.reshape_size , 
-                                            self.mean, 
-                                            self.std,
+                                            self.data_map, 
+                                            self.statistics,
                                             False )
                                             
         self.validationloader = DataLoader(self.validation_dataset, 
