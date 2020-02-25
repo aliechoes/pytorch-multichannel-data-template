@@ -170,23 +170,23 @@ class DataLoaderGenerator():
         self.statistics["upper_bound"] = torch.zeros(numer_of_channels)
         self.statistics["max"] = torch.zeros(numer_of_channels)
 
-        
-        for data in trainloader: 
+        for k, data in enumerate(trainloader, 1):
             data = data["image"] 
             for i in range(numer_of_channels):
                 self.statistics["min"][i] = min(data[:,i,:,:].min(), self.statistics["min"][i]   )
-                self.statistics["lower_bound"][i] += np.quantile( data[:,i,:,:], .1) 
+                self.statistics["lower_bound"][i] += np.quantile( data[:,i,:,:], .02) 
                 self.statistics["mean"][i] += data[:,i,:,:].mean()
                 self.statistics["std"][i] += data[:,i,:,:].std()
-                self.statistics["upper_bound"][i] += np.quantile( data[:,i,:,:], .90) 
+                self.statistics["upper_bound"][i] += np.quantile( data[:,i,:,:], .98) 
                 self.statistics["max"][i] = max(data[:,i,:,:].max(), self.statistics["max"][i]    )
 
 
-        
-        self.statistics["lower_bound"].div_(len(trainloader))
+        print(k)
+        self.statistics["lower_bound"] = self.statistics["lower_bound"] / float(k)
         self.statistics["mean"].div_(len(trainloader))
         self.statistics["std"].div_(len(trainloader))
-        self.statistics["upper_bound"].div_(len(trainloader))
+        self.statistics["upper_bound"] = self.statistics["upper_bound"] / float(k)
+
         for k in self.statistics:
             print(k,self.statistics[k])
 
