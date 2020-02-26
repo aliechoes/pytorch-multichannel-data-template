@@ -29,6 +29,9 @@ warnings.filterwarnings("ignore")
 
 
 def random_crop(image, ratio = 0.8):
+    """
+    randomly choose the 0.8 of the height and width of an image
+    """
     reshape_size = image.shape[0]
     width = int(reshape_size * ratio)
     height = int(reshape_size * ratio)
@@ -38,12 +41,17 @@ def random_crop(image, ratio = 0.8):
     return image
 
 def random_rotation(image ):
-    # pick a random degree of rotation between 25% on the left and 25% on the right
+    """
+    pick a random degree of rotation between 25% on the left and 25% on the right
+    """
+    
     random_degree = random.uniform(-25, 25)
     return rotate(image, random_degree)
 
 def random_flip(image ):
-    # pick a random degree of rotation between 25% on the left and 25% on the right
+    """
+    randomly choose to flip an image
+    """
     random_number = np.random.random()
     if  random_number < 0.25: 
         return image
@@ -54,16 +62,31 @@ def random_flip(image ):
     else: 
         return flipud(fliplr(image))
 
-def data_augmentation(image):
-    if np.random.random() > 0.5:
+def data_augmentation(image, aug):
+    """
+    combine different augmentation methods
+    """
+    if (aug == "random_crop") and (np.random.random() > 0.5):
         image = random_crop(image) 
-    if np.random.random() > 0.5: 
+    if (aug == "random_rotation") and (np.random.random() > 0.5): 
         image = random_rotation(image) 
-    image = random_flip(image)
+    if (aug == "random_flip"):
+        image = random_flip(image)
     return image
 
 
 def map_zero_one(x, a, b):
+    """
+    map your vector to zero and one
+    this is with the consideration that 
+    min(x) <= a < b <= max(x) where it leads to:
+    
+    min(x)  --> 0
+    a       --> 0
+    b       --> 1
+    max(x)  --> 1
+    """
+    assert b > a
     s = 1./(b - a)
     t = a/(a-b)
     y = s*x + t
@@ -72,6 +95,17 @@ def map_zero_one(x, a, b):
     return y
 
 def map_minus_one_to_one(x, a, b):
+    """
+    map your vector to minus one and plus one
+    this is with the consideration that 
+    min(x) <= a < b <= max(x) where it leads to:
+    
+    min(x)  --> -1
+    a       --> -1
+    b       --> 1
+    max(x)  --> 1
+    """
+    assert b > a
     s = 2./(b - a)
     t = (a+b)/(a-b)
     y = s*x + t
@@ -80,6 +114,15 @@ def map_minus_one_to_one(x, a, b):
     return y
 
 def data_mapping(image, statistics, method):
+    """
+    gets the image, statistics and the mapping method and according to the 
+    method, chooses the right function
+    Args:
+        image(np.array) :   single-channel image
+        statistics(dict):   includes the min, lower_bound, mean, std, upper_bound
+                            and the max of the *whole training data*
+        method(str)     :   the method which will be used for mapping the image
+    """
     if method == "normalize":
         image = transforms.Normalize(statistics["mean"] , statistics["std"] )(image) 
 
@@ -106,7 +149,7 @@ class Dataset_Generator(Dataset):
     """Dataset_Generator"""
 
     def __init__(self,  data_dir,    df , channels , set_type ,
-                    reshape_size = 64, data_map = None, statistics = None , augmentation = False):
+                    reshape_size = 64, data_map = None, statistics = None , augmentation = []):
         """
         Args:
             csv_file (string): Path to the csv file with annotations.
@@ -143,8 +186,8 @@ class Dataset_Generator(Dataset):
             image_dummy = imread(img_name).astype(np.float64)
             image[:,:,ch] = image_dummy
             
-        if self.augmentation:
-            image = data_augmentation(image)
+        for aug in self.augmentation:
+            image = data_augmentation(image,aug)
         
         image = resize(image , (self.reshape_size, self.reshape_size, len(self.channels)) ) 
 

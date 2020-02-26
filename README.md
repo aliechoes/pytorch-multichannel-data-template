@@ -68,9 +68,9 @@ DATETIME_NOW + _  + MODEL + _bs_ + BATCHSIZE
 ## TODO
 
 - [x] add documentation on the github
-- [ ] add documentation on the code
+- [x] add documentation on the code
 - [x] update the dataloader to be able to get different file formats
-- [ ] add options for augmentation from the config file
+- [x] add options for augmentation from the config file
 - [ ] add GRAD-CAM 
 - [x] add tensorboard 
 - [ ] add config tracker in tensorboard

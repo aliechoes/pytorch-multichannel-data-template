@@ -5,6 +5,8 @@ import torch.nn.functional as F
 from machine_learning.metrics import metric_history
 import time
 import os
+import pandas as pd
+
 
 def elapsed_time_print(start_time, message):
     elapsed_time = time.time() - start_time
@@ -29,14 +31,11 @@ def early_stopping(validation_criteria, patience):
 def train(  model,   
             data_loader, 
             optimizer,
-            criterion,
-            metric_dataframe ,    
-            metrics_of_interest,
-            num_epochs,
+            criterion,  
             writer, 
-            model_folder,
-            call_back,
-            device = 'cpu'):
+            model_folder, 
+            ml_configs, 
+            validation_configs):
     """
     the function which trains the model and evaluates it over the whole dataset
     Args:
@@ -56,9 +55,15 @@ def train(  model,
         device(str): either cpu or cuda
     """
 
-    saving_period = call_back["saving_period"]
-    patience = call_back["patience"]
-    criteria = call_back["criteria"]
+    saving_period = validation_configs["call_back"]["saving_period"]
+    patience = validation_configs["call_back"]["patience"]
+    criteria = validation_configs["call_back"]["criteria"]
+    metrics_of_interest = validation_configs["metrics_of_interest"]
+    num_epochs = ml_configs["num_epochs"]
+    device =  ml_configs["device"]
+
+    # creating a dataframe which will contain all the metrics per set per epoch
+    metric_dataframe = pd.DataFrame(columns= ["epoch","set", "metric", "value"])
 
     for epoch in range(num_epochs):  # loop over the dataset multiple times
         print("EPOCH: %d" % epoch)

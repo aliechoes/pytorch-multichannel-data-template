@@ -6,7 +6,6 @@ import torch.nn.functional as F
 from machine_learning.unet_parts import *
 
 
-
 class ShallowNet(nn.Module):
     def __init__(self,num_channels ,num_classes):
         super().__init__()
@@ -117,8 +116,10 @@ class UNet(nn.Module):
         logits = self.outc(x)
         return logits
 
-def get_model(model_name, device, num_channels ,num_classes,
-                        checkpoint):
+def get_model(ml_config, checkpoint ,num_channels ,num_classes ):
+    model_name = ml_config["model_name"]
+    device = ml_config["device"]
+    
     if model_name == "AlexNet":
         reshape_size = 256
         model = AlexNet(num_channels ,num_classes)

@@ -44,7 +44,8 @@ class DiceCoeff(Function):
         return grad_inputs, grad_target
 
 
-def get_loss(loss_function):
+def get_loss(ml_configs):
+    loss_function = ml_configs["loss_function"]
     if loss_function=="mse":
         criterion = nn.MSELoss()
         return criterion

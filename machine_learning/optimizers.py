@@ -3,9 +3,13 @@ import torchvision
 import torch
 
    
-def get_optimizer(optimization_method, model,parameters,
-                        checkpoint): 
- 
+def get_optimizer(  ml_configs, 
+                    model, 
+                    checkpoint):
+                     
+    optimization_method = ml_configs["optimization_method"]
+    parameters = ml_configs["optimization_parameters"]
+
     if optimization_method=="adam": 
         lr = parameters["lr"] 
         weight_decay = parameters["weight_decay"] 

@@ -1,26 +1,35 @@
 {
-    "data_dir": "/home/ali/code/pytorch-multichannel-data-template/sample_data/mnist/",
-    "batch_size": 64,
-    "validation_split": 0.3,
-    "data_map": "normalize",
-    "test_split": 0.3,
-    "tensorboard_path": "/home/ali/code/runs/mnist/",
-    "checkpoint_path": null,
-    "model_name": "ShallowNet",
-    "num_epochs": 100,
+	"data": {
+
+		"data_dir": "/home/ali/code/pytorch-multichannel-data-template/sample_data/mnist/",
+		"batch_size": 64,
+		"validation_split": 0.3,
+		"test_split": 0.3,
+		"data_map": "normalize",
+		"augmentation": ["random_rotation"]
+	},
+
+	"machine_learning": {
+		"model_name": "ShallowNet",
+		"num_epochs": 100,
     "device": "cpu",
-    "optimization_parameters": {
-      "lr": 0.001,
-      "weight_decay": 0.1
-    },
-    "optimization_method": "adam",
-    "loss_function": "nll_loss",
-    "metrics_of_interest": ["accuracy", "dice"],
-    "call_back": {
-      "saving_period": 10,
-      "patience":20,
-      "criteria": "accuracy"
-    }
-  }
-            
-  
+    "checkpoint_path": "/home/ali/code/runs/mnist/2020-02-26 10:43:44.577048_ShallowNet_bs_64/models/epoch_50.pth",
+		"optimization_parameters": {
+			"lr": 0.001,
+			"weight_decay": 0.1
+		},
+		"optimization_method": "adam",
+		"loss_function": "nll_loss"
+	},
+
+	"validation": {
+		"tensorboard_path": "/home/ali/code/runs/mnist/",
+		"metrics_of_interest": ["accuracy", "dice"],
+		"call_back": {
+			"saving_period": 10,
+			"patience": 20,
+			"criteria": "accuracy"
+		}
+
+	}
+}

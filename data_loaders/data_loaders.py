@@ -118,12 +118,13 @@ class DataLoaderGenerator():
 
     """
 
-    def __init__(self, data_dir, batch_size, validation_split, test_split, data_map):
-        self.data_dir = data_dir  
-        self.batch_size = batch_size
-        self.validation_split = validation_split
-        self.test_split = test_split
-        self.data_map = data_map
+    def __init__(self,data_configs):
+        self.data_dir = data_configs["data_dir"]  
+        self.batch_size = data_configs["batch_size"]
+        self.validation_split = data_configs["validation_split"]
+        self.test_split = data_configs["test_split"]
+        self.data_map = data_configs["data_map"]
+        self.augmentation = data_configs["augmentation"]
         
     def data_frame_creator(self):
         """
@@ -157,52 +158,61 @@ class DataLoaderGenerator():
                                                 randomize = False)
 
 
-    def calculate_statistics(self):
+    def calculate_statistics(self, checkpoint):
         """
         This functions creates the trainloader and calulates the statistics of
         the training set. It includes min, lower_bound, mean, std, upper_bound and 
         max values per channel
         """
-                
-        train_dataset = Dataset_Generator(  self.data_dir,  
-                                            self.df , 
-                                            self.existing_channels , 
-                                            "train" , 
-                                            self.reshape_size )
-        
-        trainloader = DataLoader(   train_dataset, \
-                                    batch_size=self.batch_size, \
-                                    shuffle=True, num_workers=1) 
+        self.statistics = dict()
+        if checkpoint is not None:
+            print("used previously calculated statistics for transfer learning")
+            self.statistics["min"] = checkpoint["statistics"]["min"]
+            self.statistics["lower_bound"] = checkpoint["statistics"]["lower_bound"] 
+            self.statistics["mean"] = checkpoint["statistics"]["mean"]
+            self.statistics["std"] = checkpoint["statistics"]["std"]
+            self.statistics["upper_bound"] = checkpoint["statistics"]["upper_bound"]
+            self.statistics["max"] = checkpoint["statistics"]["max"]
+        else:
+            train_dataset = Dataset_Generator(  self.data_dir,  
+                                                self.df , 
+                                                self.existing_channels , 
+                                                "train" , 
+                                                self.reshape_size )
+            
+            trainloader = DataLoader(   train_dataset, \
+                                        batch_size=self.batch_size, \
+                                        shuffle=True, num_workers=1) 
 
-        numer_of_channels = len(self.existing_channels)    
+            numer_of_channels = len(self.existing_channels)    
 
-        self.statistics = dict()                   
-        self.statistics["min"] = torch.zeros(numer_of_channels) + np.power(2,16) # 16-bit images
-        self.statistics["lower_bound"] = torch.zeros(numer_of_channels)
-        self.statistics["mean"] = torch.zeros(numer_of_channels)
-        self.statistics["std"] = torch.zeros(numer_of_channels)
-        self.statistics["upper_bound"] = torch.zeros(numer_of_channels)
-        self.statistics["max"] = torch.zeros(numer_of_channels)
+                            
+            self.statistics["min"] = torch.zeros(numer_of_channels) + np.power(2,16) # 16-bit images
+            self.statistics["lower_bound"] = torch.zeros(numer_of_channels)
+            self.statistics["mean"] = torch.zeros(numer_of_channels)
+            self.statistics["std"] = torch.zeros(numer_of_channels)
+            self.statistics["upper_bound"] = torch.zeros(numer_of_channels)
+            self.statistics["max"] = torch.zeros(numer_of_channels)
 
-        for k, data in enumerate(trainloader, 1):
-            data = data["image"] 
-            for i in range(numer_of_channels):
-                self.statistics["min"][i] = min(data[:,i,:,:].min(), self.statistics["min"][i]   )
-                self.statistics["lower_bound"][i] += np.quantile( data[:,i,:,:], .02) 
-                self.statistics["mean"][i] += data[:,i,:,:].mean()
-                self.statistics["std"][i] += data[:,i,:,:].std()
-                self.statistics["upper_bound"][i] += np.quantile( data[:,i,:,:], .98) 
-                self.statistics["max"][i] = max(data[:,i,:,:].max(), self.statistics["max"][i]    )
+            for k, data in enumerate(trainloader, 1):
+                data = data["image"] 
+                for i in range(numer_of_channels):
+                    self.statistics["min"][i] = min(data[:,i,:,:].min(), self.statistics["min"][i]   )
+                    self.statistics["lower_bound"][i] += np.quantile( data[:,i,:,:], .02) 
+                    self.statistics["mean"][i] += data[:,i,:,:].mean()
+                    self.statistics["std"][i] += data[:,i,:,:].std()
+                    self.statistics["upper_bound"][i] += np.quantile( data[:,i,:,:], .98) 
+                    self.statistics["max"][i] = max(data[:,i,:,:].max(), self.statistics["max"][i]    )
 
-        self.statistics["lower_bound"] = self.statistics["lower_bound"] / float(k)
-        self.statistics["mean"].div_(len(trainloader))
-        self.statistics["std"].div_(len(trainloader))
-        self.statistics["upper_bound"] = self.statistics["upper_bound"] / float(k)
+            self.statistics["lower_bound"] = self.statistics["lower_bound"] / float(k)
+            self.statistics["mean"].div_(len(trainloader))
+            self.statistics["std"].div_(len(trainloader))
+            self.statistics["upper_bound"] = self.statistics["upper_bound"] / float(k)
 
         for k in self.statistics:
             print(k,self.statistics[k])
 
-    def data_loader(self, reshape_size):
+    def data_loader(self, reshape_size, checkpoint):
         """
         This functions first calculates the statistics of the training dataset.
         then creates two dataset and corresponding data loader
@@ -215,7 +225,7 @@ class DataLoaderGenerator():
         """
         self.reshape_size = reshape_size
         print("Starting to calculate the statistics...")
-        self.calculate_statistics()
+        self.calculate_statistics(checkpoint)
         print("Calculating the statistics is finished")
 
         self.train_dataset = Dataset_Generator(self.data_dir,  
@@ -225,7 +235,7 @@ class DataLoaderGenerator():
                                             self.reshape_size , 
                                             self.data_map, 
                                             self.statistics,
-                                            True )
+                                            self.augmentation )
 
         self.trainloader = DataLoader(self.train_dataset, 
                                 batch_size=self.batch_size, \
@@ -239,7 +249,7 @@ class DataLoaderGenerator():
                                             self.reshape_size , 
                                             self.data_map, 
                                             self.statistics,
-                                            False )
+                                            [] )
                                             
         self.validationloader = DataLoader(self.validation_dataset, 
                                 batch_size= self.batch_size, \
