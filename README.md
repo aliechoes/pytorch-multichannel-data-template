@@ -19,6 +19,7 @@ For using this code, you need to use the config file following information:
 * `batch_size`:  Batch size
 * `validation_split`: percentage of train-validation split
 * `data_map`: the map which can be used for mapping data from one range to another. In case `null` is passed, no transformation will be done on the data. At the moment, possible options are: `normalize`, `map_zero_one` and `map_minus_one_to_one`
+* `augmentation`: list which can be used for data augemtnation, at the moment the options are `["random_crop", "random_rotation", "random_flip"]`. In case there is no need for augmentation, you can pass `[]`
 * `test_split`: percentage of test vs train-validation split
 * `tensorboard_path`: path to save tensorboard as well as other outputs
 * `file_extension`: file extension which exists in the data, for example `.png`
@@ -62,7 +63,7 @@ This code is based on these libraries:
 Each run is named using multiple conditions to be able to distinguish their results. The naming is based on:
 
 ```
-DATETIME_NOW + _  + MODEL + _bs_ + BATCHSIZE
+DATETIME_NOW + _ + MODEL + _bs_ + BATCHSIZE
 ```
 
 ## TODO
