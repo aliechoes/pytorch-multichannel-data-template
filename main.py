@@ -37,12 +37,12 @@ def main(configs):
     number_of_classes = len(data_loader.nb_per_class.keys())
 
     # initialize the model
-    model, reshape_size = get_model(    ml_configs,
-                                        checkpoint,
-                                        number_of_channels ,
-                                        number_of_classes)
+    model = get_model(ml_configs,
+                                                    checkpoint,
+                                                    number_of_channels ,
+                                                    number_of_classes)
     
-    data_loader.data_loader(reshape_size, checkpoint)
+    data_loader.data_loader(model.image_size, checkpoint)
 
     ## load the optimzer
     optimizer = get_optimizer(  ml_configs, 
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     parser.add_argument('-c',\
                         '--config', \
                         help='config yaml file address', \
-                        required=True, \
+                        default="configs/sample_config.json", \
                         type=str)
 
     args = vars(parser.parse_args())
