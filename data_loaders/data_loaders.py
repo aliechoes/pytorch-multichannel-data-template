@@ -240,7 +240,7 @@ class DataLoaderGenerator():
         self.trainloader = DataLoader(self.train_dataset, 
                                 batch_size=self.batch_size, \
                                 shuffle=True, 
-                                num_workers=1)
+                                num_workers=4)
                                 
         self.validation_dataset = Dataset_Generator(self.data_dir,  
                                             self.df , 
@@ -254,4 +254,4 @@ class DataLoaderGenerator():
         self.validationloader = DataLoader(self.validation_dataset, 
                                 batch_size= self.batch_size, \
                                 shuffle=False, 
-                                num_workers=1)
+                                num_workers=4)

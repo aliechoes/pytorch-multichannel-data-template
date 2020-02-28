@@ -113,7 +113,7 @@ def map_minus_one_to_one(x, a, b):
     y[y<-1] = -1
     return y
 
-def data_mapping(image, statistics, method):
+def data_mapping(image, statistics, methods):
     """
     gets the image, statistics and the mapping method and according to the 
     method, chooses the right function
@@ -121,23 +121,25 @@ def data_mapping(image, statistics, method):
         image(np.array) :   single-channel image
         statistics(dict):   includes the min, lower_bound, mean, std, upper_bound
                             and the max of the *whole training data*
-        method(str)     :   the method which will be used for mapping the image
+        methods(list)     :   the method which will be used for mapping the image
     """
-    if method == "normalize":
-        image = transforms.Normalize(statistics["mean"] , statistics["std"] )(image) 
 
-    elif method == "map_zero_one":
-        for ch in range(image.shape[0]):
-            a = statistics["lower_bound"][ch]
-            b = statistics["upper_bound"][ch]
-            image[ch,:,:] = map_zero_one(image[ch,:,:], a, b)
-    elif method == "map_minus_one_to_one":
-        for ch in range(image.shape[0]):
-            a = statistics["lower_bound"][ch]
-            b = statistics["upper_bound"][ch]
-            image[ch,:,:] = map_minus_one_to_one(image[ch,:,:], a, b)
-    else:
-        raise Exception('Wrong mapping function')
+    for m in methods:
+
+        if m == "normalize":
+            image = transforms.Normalize(statistics["mean"] , statistics["std"] )(image) 
+        elif m == "map_zero_one":
+            for ch in range(image.shape[0]):
+                a = statistics["lower_bound"][ch]
+                b = statistics["upper_bound"][ch]
+                image[ch,:,:] = map_zero_one(image[ch,:,:], a, b)
+        elif m == "map_minus_one_to_one":
+            for ch in range(image.shape[0]):
+                a = statistics["lower_bound"][ch]
+                b = statistics["upper_bound"][ch]
+                image[ch,:,:] = map_minus_one_to_one(image[ch,:,:], a, b)
+        else:
+            raise Exception('Wrong mapping function')
     return image
 
 
