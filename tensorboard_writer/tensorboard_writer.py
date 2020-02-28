@@ -22,41 +22,6 @@ def select_n_random(train_dataset , n=200):
      
     return features_data, features_labels
 
-# helper functions
-
-def images_to_probs(net, images, classes):
-    '''
-    Generates predictions and corresponding probabilities from a trained
-    network and a list of images
-    '''
-    output = net(images)
-    # convert output probabilities to predicted class
-    _, preds_tensor = torch.max(output, 1)
-    preds = np.squeeze(preds_tensor.numpy())
-    return preds, [F.softmax(el, dim=0)[i].item() for i, el in zip(preds, output)]
-
-
-def plot_classes_preds(net, images, labels):
-    '''
-    Generates matplotlib Figure using a trained network, along with images
-    and labels from a batch, that shows the network's top prediction along
-    with its probability, alongside the actual label, coloring this
-    information based on whether the prediction was correct or not.
-    Uses the "images_to_probs" function.
-    '''
-    preds, probs = images_to_probs(net, images)
-    # plot the images in the batch, along with predicted and true labels
-    fig = plt.figure(figsize=(12, 48))
-    for idx in np.arange(4):
-        ax = fig.add_subplot(1, 4, idx+1, xticks=[], yticks=[])
-        matplotlib_imshow(images[idx], one_channel=True)
-        ax.set_title("{0}, {1:.1f}%\n(label: {2})".format(
-            classes[preds[idx]],
-            probs[idx] * 100.0,
-            classes[labels[idx]]),
-                    color=("green" if preds[idx]==labels[idx].item() else "red"))
-    return fig
-
 class TensorBoardSummaryWriter(object):
     """
     Class for writing different outputs to TensorBoard
@@ -69,7 +34,7 @@ class TensorBoardSummaryWriter(object):
         Add metrics to tensorboard the scalars part.
         Args:
             df(pandas dataframe): dataframe with all the recorded metrics per epoch
-            metrics_of_interest(str): the metric which should be written in tensorboard
+            metrics_of_interest(list): the metrics which should be written in tensorboard
             epoch(int): epoch
         """
         for mt in metrics_of_interest:
@@ -150,33 +115,10 @@ class TensorBoardSummaryWriter(object):
                         label_img=images[:,j,:,:].reshape(images_shape),
                         global_step = epoch + 1)
             self.writer.close()
-        
-    def add_hparams(self, metric_dataframe, configs ):  
-        hparam_dict = configs["optimization_parameters"]
-        hparam_dict["batch_size"] = configs["batch_size"]
-        hparam_dict["validation_split"] = configs["validation_split"]
-        hparam_dict["test_split"] = configs["test_split"]  
-        hparam_dict["model_name"] = configs["model_name"] 
-        hparam_dict["optimization_method"] = configs["optimization_method"]
-        hparam_dict["loss_function"] = configs["loss_function"] 
-        if configs["checkpoint_path"] is None:
-           hparam_dict["transfer_learning"] = "No"
-        else:  
-           hparam_dict["transfer_learning"] = "Yes"  
-        max_epoch = metric_dataframe["epoch"].iloc[-1]
-        metric_dict = dict()
-        for m in configs["metrics_of_interest"] :
-            for s in ["validation"]:
-                indx = (metric_dataframe["set"] == s) & (metric_dataframe["metric"] == m)
-                indx = indx & ((metric_dataframe["epoch"] == max_epoch))
-                metric_dict[m] = round(metric_dataframe.loc[indx, "value"].iloc[0], 4)
- 
-        self.writer.add_hparams(hparam_dict, metric_dict) 
-        self.writer.close()
     
     def add_pr_curve(self, data_loader, epoch):
         """
-        outpurs the precision recall curve per class per epoch
+        outputs the precision recall curve per class per epoch
         Args:
             data_loader: data loader from pytorch 
             model: pytorch model

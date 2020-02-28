@@ -10,6 +10,7 @@ def main(configs):
     data_configs = configs["data"]
     ml_configs = configs["machine_learning"]
     validation_configs = configs["validation"]
+    
     tensorboard_path = validation_configs["tensorboard_path"]
 
 
@@ -64,9 +65,6 @@ def main(configs):
                                     model_folder, 
                                     ml_configs, 
                                     validation_configs)
-                                    
-    # save hyperparameters for comparison
-    # writer.add_hparams(metric_dataframe, configs )
 
     # save the dataset with train/validation/test per epoch
     output_folder = os.path.join(tensorboard_path, run_name, "output_files/")

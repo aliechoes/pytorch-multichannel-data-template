@@ -3,13 +3,8 @@ import torchvision
 import argparse
 from datetime import datetime
 import os
-import random
-import base64
-import hashlib
-import mimetypes
 import json
-import imageio  
-import numpy as np 
+import numpy as np
 import pandas as pd
 from data_loaders.data_loaders import DataLoaderGenerator
 from machine_learning.models import get_model
