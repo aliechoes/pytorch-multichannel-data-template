@@ -45,6 +45,6 @@ At the moment, the code can handle files with `Ch1` to `Ch18`. it is expected th
 
 In addition, it does not matter whether the channels are starting from `Ch1`. The code can handle any random variation of the channels. It is in particular important as sometimes, we would like to keep track of the channels which were used in the experiment. 
 
-## Extensions
+## Image Extensions
 
 The images should be one of the supporting formats by `imageio`

@@ -7,7 +7,6 @@ In this repository, you can find PyTorch based image classification code which c
 * [configs](configs): includes the config files
 * [data_loaders](data_loaders): includes the dataset and dataloders
 * [sample_data](sample_data): example of MNIST for running the code
-* [preprocessing](preprocessing): includes the preprocessing methods
 * [machine_learning](machine_learning): includes the models, metrics, losses as well as the optimizers.
 * [tensorboard_writer](tensorboard_writer): includes the methods for tensorboard as well as saving results
 
@@ -48,9 +47,8 @@ python main.py --config ./configs/sample_config.json
 
 ## Libraries
 
-This code is based on these libraries:
+This code is based `Python 3.7.6 (Anaconda)` using these libraries:
 
-* `Python 3.7.6 (Anaconda)`
 * `torch=='1.4.0'`
 * `tensorboard=='1.15.0'`
 * `pandas=='1.0.0'`
@@ -73,6 +71,7 @@ DATETIME_NOW + _ + MODEL + _bs_ + BATCHSIZE
 - [x] update the dataloader to be able to get different file formats
 - [x] add options for augmentation from the config file
 - [ ] add GRAD-CAM 
+- [ ] add steps for data_map
 - [x] add tensorboard 
 - [ ] add config tracker in tensorboard
 - [x] add pr-cruve
