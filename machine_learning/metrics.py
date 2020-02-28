@@ -34,7 +34,7 @@ def metric_history(df, metric_dataframe, epoch, metrics_of_interest ):
                 'metric': 'accuracy',
                 'value': accuracy_score(y_true, y_pred ) 
             }
-            print("accuracy for the %s set is: %f" % (s, accuracy_score(y_true, y_pred ) ) )
+            print("epoch %d: accuracy for the %s set is %f" % (epoch, s, accuracy_score(y_true, y_pred ) ) )
             metric_dataframe = metric_dataframe.append(results_temp, ignore_index=True)
 
         if "cross_entropy" in metrics_of_interest:

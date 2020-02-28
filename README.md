@@ -61,7 +61,7 @@ This code is based `Python 3.7.6 (Anaconda)` using these libraries:
 Each run is named using multiple conditions to be able to distinguish their results. The naming is based on:
 
 ```
-DATETIME_NOW + _ + MODEL + _bs_ + BATCHSIZE
+DATETIME_NOW + _ + MODEL
 ```
 
 ## TODO

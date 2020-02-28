@@ -16,7 +16,6 @@ from torchvision import transforms, utils
 import glob 
 import sklearn
 from sklearn.model_selection import train_test_split
-from sklearn.utils import shuffle
 from skimage.transform import   rescale, resize, rotate
 from imageio import imread 
 from data_loaders.data_sets import Dataset_Generator
@@ -28,10 +27,10 @@ def finding_classes(data_dir):
     as classes
     """
     classes = os.listdir(data_dir)
-    print(classes)
+    print("Classes: %s \n" % classes)
     return classes
 
-def finding_channels(   classes, data_dir):
+def finding_channels(classes, data_dir):
     """
     this function finds the existing channels in the folder and returns
     a list of them
@@ -50,11 +49,9 @@ def finding_channels(   classes, data_dir):
         
 def number_of_files_per_class(classes, data_dir, existing_channels ):
     """
-    this function finds the number of files in each folder. it is important
-    as with this, we can call all the files. In Amnis, each experiment
-    always starts from 0.
-
-    output: dictionary with keys as classes and values as number of files
+    this function finds the number of files in each folder. It is important to
+    consider that we consider all the channels togethr as on single image
+    output: dictionary with keys as classes and values as number of separate images
     """
     results = dict()
     for cl in classes:
@@ -65,15 +62,16 @@ def number_of_files_per_class(classes, data_dir, existing_channels ):
     
     
     
-def input_dataframe_generator(data_dir, classes_dict, representing_channel):
+def input_dataframe_generator(data_dir, classes, representing_channel):
     """
     This functions gets the dictionary with the classes and number of files 
     per class and gives back a dataframe with these columns
-    ["file"  ,"label", "class"]
+    ["file"  ,"label", "class", "prediction",  
+            "class0_probability" ... "classN_probability"]
     """
     label = 0
     df = pd.DataFrame(columns= ["file"  ,"label", "class", "prediction"] )
-    for cl in classes_dict:
+    for cl in classes:
         df_dummy = pd.DataFrame(columns= ["file" ,"label", "class", "prediction"]  )
         df_dummy["file"] = glob.glob(os.path.join(data_dir, cl, "*_" + representing_channel + "*") ) 
         df_dummy["label"] = label
@@ -81,7 +79,7 @@ def input_dataframe_generator(data_dir, classes_dict, representing_channel):
         df_dummy["prediction"] = -1.
         df = df.append(df_dummy, ignore_index=True)
         label = label + 1
-    for cl in classes_dict:
+    for cl in classes:
         df[cl+"_probability"] = -1.
     return df
 
@@ -89,8 +87,7 @@ def train_validation_test_split(df, validation_size= 0.2 , test_size = 0.3 ,
                 randomize = False):
     """
     This functions gets the dataframe and creates train, validation and test 
-    split. It gives back the dataframe with columns:
-    ["file"  ,"label", "class", "set]
+    split. it adds a new column: "set"
     """
 
     df["set"] = "train"
@@ -101,23 +98,16 @@ def train_validation_test_split(df, validation_size= 0.2 , test_size = 0.3 ,
                                     random_state=314)
     df.loc[X_validation.index,"set"] = "validation"
     df.loc[X_test.index,"set"] = "test"
-    if randomize:
-        df = shuffle(df)
+    
     return df
 
 
 class DataLoaderGenerator():
     """
-    data loader python generator.It is the main
+    data loader python generator.
     Args:
-        data_dir(str): data directory 
-        batch_size(int): batch size
-        validation_split(float): size of data for validatoin. should be between 0 & 1
-        test_split(float): size of data for test. should be between 0 & 1
-        data_map(str): the mapping type for data (per pixel)
-
+        data_configs(dict):
     """
-
     def __init__(self,data_configs):
         self.data_dir = data_configs["data_dir"]  
         self.batch_size = data_configs["batch_size"]
@@ -145,17 +135,15 @@ class DataLoaderGenerator():
         self.nb_per_class = number_of_files_per_class(  self.classes, 
                                                         self.data_dir, 
                                                         self.existing_channels)
-        print("detected files per class")
-        print(self.nb_per_class)
+        print("detected independent images per class %s \n" % self.nb_per_class) 
 
         self.df = input_dataframe_generator(self.data_dir, 
-                                            self.nb_per_class,
+                                            self.classes,
                                             self.existing_channels[0])
 
         self.df = train_validation_test_split(  self.df, 
                                                 self.validation_split , 
-                                                self.test_split ,
-                                                randomize = False)
+                                                self.test_split)
 
 
     def calculate_statistics(self, checkpoint):
@@ -224,9 +212,9 @@ class DataLoaderGenerator():
                                 train, validation and test
         """
         self.reshape_size = reshape_size
-        print("Starting to calculate the statistics...")
+        print("\nStarting to calculate the statistics...")
         self.calculate_statistics(checkpoint)
-        print("Calculating the statistics is finished")
+        print("Calculating the statistics is finished \n")
 
         self.train_dataset = Dataset_Generator(self.data_dir,  
                                             self.df , 

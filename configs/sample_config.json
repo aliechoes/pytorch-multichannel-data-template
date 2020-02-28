@@ -1,7 +1,7 @@
 {
 	"data": {
 
-		"data_dir": "/home/ali/code/pytorch-multichannel-data-template/sample_data/mnist/",
+		"data_dir": "./sample_data/mnist/",
 		"batch_size": 64,
 		"validation_split": 0.3,
 		"test_split": 0.3,
@@ -23,7 +23,7 @@
 	},
 
 	"validation": {
-		"tensorboard_path": "/home/ali/code/runs/mnist/",
+		"tensorboard_path": "./sample_output/",
 		"metrics_of_interest": ["accuracy", "dice"],
 		"call_back": {
 			"saving_period": 10,

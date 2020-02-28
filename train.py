@@ -8,15 +8,23 @@ import os
 import pandas as pd
 
 
-def elapsed_time_print(start_time, message):
+def elapsed_time_print(start_time, message, epoch):
+    """
+    function to print the elapsed fime
+    """
     elapsed_time = time.time() - start_time
     elapsed_time = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
-    print(4*"*")
-    print(message % elapsed_time)
-    print(4*"*")
+    to_be_printed = "epoch %d: " + message 
+    print(4*"---")
+    print(to_be_printed % (epoch, elapsed_time))
+    print(4*"---")
     return None
 
 def early_stopping(validation_criteria, patience):
+    """
+    early stopping in case the model does not improve after some epochs.
+    It only looks at the validation set
+    """
     n0 = len(validation_criteria) - patience 
     n1 = len(validation_criteria) + 1 
     validation_difference = validation_criteria.iloc[n0:n1] - \
@@ -66,7 +74,9 @@ def train(  model,
     metric_dataframe = pd.DataFrame(columns= ["epoch","set", "metric", "value"])
 
     for epoch in range(num_epochs):  # loop over the dataset multiple times
+        print(12*"-*-")
         print("EPOCH: %d" % epoch)
+        model.train()
         running_loss = 0.0
         start_time = time.time()
         for i, data in enumerate(data_loader.trainloader, 0):
@@ -94,9 +104,9 @@ def train(  model,
             if i % 5 == 4:
                 print('[epoch: %d, minibatch %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 5))
                 running_loss = 0.0
-        elapsed_time_print(start_time, "Training took %s")
+        elapsed_time_print(start_time, "Training took %s", epoch)
 
-
+        # saving the model
         if  epoch % saving_period == (saving_period - 1):
             start_time = time.time()
             model_path = os.path.join(model_folder, "epoch_" + str(epoch + 1) + ".pth" )
@@ -109,12 +119,15 @@ def train(  model,
                 'statistics': data_loader.statistics,
                 'data_map': data_loader.data_map
             }, model_path)  
-            elapsed_time_print(start_time, "Saving Model took %s")
+            elapsed_time_print(start_time, "Saving Model took %s", epoch)
 
+        # the evaluation phase
         with torch.no_grad():  
+            model.eval()
             start_time = time.time()
             for i, data in enumerate(data_loader.validationloader, 0): 
- 
+                
+                # finding the file in the dataframe
                 idx = data["idx"].cpu().numpy()   
 
                 inputs, labels = data["image"], data["label"]
@@ -124,7 +137,6 @@ def train(  model,
                 labels = labels.reshape(labels.shape[0])
                 
                 outputs = model(inputs)
-                #embedding = model.embedding_generator(inputs)
                 
                 outputs_probability = F.softmax(outputs).cpu().numpy()  
                 _, predicted = torch.max(outputs.data, 1) 
@@ -134,7 +146,7 @@ def train(  model,
                 for k, cl in enumerate(data_loader.classes,0):
                     data_loader.df.loc[idx,cl + "_probability"] = outputs_probability[:,k]
 
-
+            # adding the results to the metric dataframe 
             metric_dataframe = metric_history(data_loader.df, 
                             metric_dataframe, 
                             epoch, 
@@ -144,7 +156,9 @@ def train(  model,
             writer.add_images( data_loader, epoch )
             writer.add_pr_curve( data_loader, epoch )
 
-        elapsed_time_print(start_time, "Evaluating Model took %s")
+        elapsed_time_print(start_time, "Evaluating Model took %s", epoch)
+
+        # check for early stopping
         if epoch > 1.5*patience:
             indx =  (metric_dataframe["set"] == "validation") & \
                         (metric_dataframe["metric"] == criteria )

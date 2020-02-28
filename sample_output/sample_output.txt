@@ -1,0 +1,627 @@
+data : {'data_dir': './sample_data/mnist/', 'batch_size': 64, 'validation_split': 0.3, 'test_split': 0.3, 'data_map': ['normalize'], 'augmentation': ['random_rotation']} 
+
+machine_learning : {'model_name': 'ShallowNet', 'num_epochs': 100, 'device': 'cpu', 'checkpoint_path': None, 'optimization_parameters': {'lr': 0.001, 'weight_decay': 0.0001}, 'optimization_method': 'adam', 'loss_function': 'nll_loss'} 
+
+validation : {'tensorboard_path': './sample_runs/mnist/', 'metrics_of_interest': ['accuracy', 'dice'], 'call_back': {'saving_period': 10, 'patience': 20, 'criteria': 'accuracy'}} 
+
+Model Name: 2020-02-28 22:10:40.241832_ShallowNet 
+
+Classes: ['Class_1', 'Class_2', 'Class_0'] 
+
+detected independent images per class {'Class_1': 100, 'Class_2': 100, 'Class_0': 100} 
+
+ShallowNet(
+  (features): Sequential(
+    (0): Conv2d(2, 10, kernel_size=(5, 5), stride=(1, 1))
+    (1): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (2): ReLU(inplace=True)
+    (3): Conv2d(10, 20, kernel_size=(5, 5), stride=(1, 1))
+    (4): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (5): ReLU(inplace=True)
+  )
+  (embedding): Sequential(
+    (0): Dropout2d(p=0.5, inplace=False)
+    (1): Linear(in_features=320, out_features=50, bias=True)
+    (2): ReLU(inplace=True)
+  )
+  (classifier): Sequential(
+    (0): Linear(in_features=50, out_features=3, bias=True)
+  )
+)
+
+Starting to calculate the statistics...
+min tensor([0., 0.])
+lower_bound tensor([0., 0.])
+mean tensor([34.0077, 34.0077])
+std tensor([77.7247, 77.7247])
+upper_bound tensor([255., 255.])
+max tensor([255., 255.])
+Calculating the statistics is finished 
+
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 0
+------------
+epoch 0: Training took 00:00:00
+------------
+------------
+epoch 0: accuracy for the train set is 0.979592
+dice for the train set is: 0.979302
+------------
+epoch 0: accuracy for the validation set is 0.968254
+dice for the validation set is: 0.966989
+------------
+epoch 0: accuracy for the test set is 0.933333
+dice for the test set is: 0.934175
+------------
+------------
+epoch 0: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 1
+------------
+epoch 1: Training took 00:00:00
+------------
+------------
+epoch 1: accuracy for the train set is 0.897959
+dice for the train set is: 0.891317
+------------
+epoch 1: accuracy for the validation set is 0.841270
+dice for the validation set is: 0.837089
+------------
+epoch 1: accuracy for the test set is 0.788889
+dice for the test set is: 0.785563
+------------
+------------
+epoch 1: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 2
+------------
+epoch 2: Training took 00:00:00
+------------
+------------
+epoch 2: accuracy for the train set is 0.897959
+dice for the train set is: 0.891317
+------------
+epoch 2: accuracy for the validation set is 0.809524
+dice for the validation set is: 0.801137
+------------
+epoch 2: accuracy for the test set is 0.788889
+dice for the test set is: 0.776227
+------------
+------------
+epoch 2: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 3
+------------
+epoch 3: Training took 00:00:00
+------------
+------------
+epoch 3: accuracy for the train set is 0.911565
+dice for the train set is: 0.904774
+------------
+epoch 3: accuracy for the validation set is 0.857143
+dice for the validation set is: 0.848907
+------------
+epoch 3: accuracy for the test set is 0.811111
+dice for the test set is: 0.802590
+------------
+------------
+epoch 3: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 4
+------------
+epoch 4: Training took 00:00:00
+------------
+------------
+epoch 4: accuracy for the train set is 0.911565
+dice for the train set is: 0.905619
+------------
+epoch 4: accuracy for the validation set is 0.936508
+dice for the validation set is: 0.936843
+------------
+epoch 4: accuracy for the test set is 0.877778
+dice for the test set is: 0.874620
+------------
+------------
+epoch 4: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 5
+------------
+epoch 5: Training took 00:00:00
+------------
+------------
+epoch 5: accuracy for the train set is 0.959184
+dice for the train set is: 0.958170
+------------
+epoch 5: accuracy for the validation set is 0.968254
+dice for the validation set is: 0.966989
+------------
+epoch 5: accuracy for the test set is 0.955556
+dice for the test set is: 0.955896
+------------
+------------
+epoch 5: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 6
+------------
+epoch 6: Training took 00:00:00
+------------
+------------
+epoch 6: accuracy for the train set is 0.972789
+dice for the train set is: 0.972306
+------------
+epoch 6: accuracy for the validation set is 0.968254
+dice for the validation set is: 0.966989
+------------
+epoch 6: accuracy for the test set is 0.966667
+dice for the test set is: 0.966983
+------------
+------------
+epoch 6: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 7
+------------
+epoch 7: Training took 00:00:00
+------------
+------------
+epoch 7: accuracy for the train set is 0.965986
+dice for the train set is: 0.964783
+------------
+epoch 7: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983701
+------------
+epoch 7: accuracy for the test set is 0.944444
+dice for the test set is: 0.944617
+------------
+------------
+epoch 7: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 8
+------------
+epoch 8: Training took 00:00:00
+------------
+------------
+epoch 8: accuracy for the train set is 0.972789
+dice for the train set is: 0.971902
+------------
+epoch 8: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983701
+------------
+epoch 8: accuracy for the test set is 0.944444
+dice for the test set is: 0.944617
+------------
+------------
+epoch 8: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 9
+------------
+epoch 9: Training took 00:00:00
+------------
+------------
+epoch 9: Saving Model took 00:00:00
+------------
+------------
+epoch 9: accuracy for the train set is 0.979592
+dice for the train set is: 0.979346
+------------
+epoch 9: accuracy for the validation set is 0.968254
+dice for the validation set is: 0.966989
+------------
+epoch 9: accuracy for the test set is 0.988889
+dice for the test set is: 0.988964
+------------
+------------
+epoch 9: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 10
+------------
+epoch 10: Training took 00:00:00
+------------
+------------
+epoch 10: accuracy for the train set is 0.986395
+dice for the train set is: 0.986218
+------------
+epoch 10: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 10: accuracy for the test set is 0.988889
+dice for the test set is: 0.988964
+------------
+------------
+epoch 10: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 11
+------------
+epoch 11: Training took 00:00:00
+------------
+------------
+epoch 11: accuracy for the train set is 0.993197
+dice for the train set is: 0.993101
+------------
+epoch 11: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 11: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 11: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 12
+------------
+epoch 12: Training took 00:00:00
+------------
+------------
+epoch 12: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 12: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 12: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 12: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 13
+------------
+epoch 13: Training took 00:00:00
+------------
+------------
+epoch 13: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 13: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 13: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 13: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 14
+------------
+epoch 14: Training took 00:00:00
+------------
+------------
+epoch 14: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 14: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 14: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 14: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 15
+------------
+epoch 15: Training took 00:00:00
+------------
+------------
+epoch 15: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 15: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 15: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 15: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 16
+------------
+epoch 16: Training took 00:00:00
+------------
+------------
+epoch 16: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 16: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 16: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 16: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 17
+------------
+epoch 17: Training took 00:00:00
+------------
+------------
+epoch 17: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 17: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 17: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 17: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 18
+------------
+epoch 18: Training took 00:00:00
+------------
+------------
+epoch 18: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 18: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 18: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 18: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 19
+------------
+epoch 19: Training took 00:00:00
+------------
+------------
+epoch 19: Saving Model took 00:00:00
+------------
+------------
+epoch 19: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 19: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 19: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 19: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 20
+------------
+epoch 20: Training took 00:00:00
+------------
+------------
+epoch 20: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 20: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 20: accuracy for the test set is 0.988889
+dice for the test set is: 0.988964
+------------
+------------
+epoch 20: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 21
+------------
+epoch 21: Training took 00:00:00
+------------
+------------
+epoch 21: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 21: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 21: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 21: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 22
+------------
+epoch 22: Training took 00:00:00
+------------
+------------
+epoch 22: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 22: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 22: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 22: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 23
+------------
+epoch 23: Training took 00:00:00
+------------
+------------
+epoch 23: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 23: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 23: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 23: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 24
+------------
+epoch 24: Training took 00:00:00
+------------
+------------
+epoch 24: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 24: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 24: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 24: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 25
+------------
+epoch 25: Training took 00:00:00
+------------
+------------
+epoch 25: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 25: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 25: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 25: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 26
+------------
+epoch 26: Training took 00:00:00
+------------
+------------
+epoch 26: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 26: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 26: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 26: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 27
+------------
+epoch 27: Training took 00:00:00
+------------
+------------
+epoch 27: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 27: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 27: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 27: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 28
+------------
+epoch 28: Training took 00:00:00
+------------
+------------
+epoch 28: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 28: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 28: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 28: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 29
+------------
+epoch 29: Training took 00:00:00
+------------
+------------
+epoch 29: Saving Model took 00:00:00
+------------
+------------
+epoch 29: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 29: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 29: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 29: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 30
+------------
+epoch 30: Training took 00:00:00
+------------
+------------
+epoch 30: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 30: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 30: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 30: Evaluating Model took 00:00:00
+------------
+-*--*--*--*--*--*--*--*--*--*--*--*-
+EPOCH: 31
+------------
+epoch 31: Training took 00:00:00
+------------
+------------
+epoch 31: accuracy for the train set is 1.000000
+dice for the train set is: 1.000000
+------------
+epoch 31: accuracy for the validation set is 0.984127
+dice for the validation set is: 0.983584
+------------
+epoch 31: accuracy for the test set is 1.000000
+dice for the test set is: 1.000000
+------------
+------------
+epoch 31: Evaluating Model took 00:00:00
+------------
+The training has stopped as the early stopping is triggered
+Finished Training

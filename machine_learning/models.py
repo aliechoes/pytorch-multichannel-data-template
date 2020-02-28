@@ -98,15 +98,26 @@ class AlexNet(nn.Module):
 
 
 def get_model(ml_config, checkpoint ,num_channels ,num_classes ):
+    """
+    function for getting the model:
+    Args:
+        ml_config(dict): machine learning config
+        checkpoint(dict): in case of transfer learning
+        num_channels(int): number of channels to initiate the network
+        num_classes(int): number of classes to initiate the network
+
+    remark: `intution_layer` is grad-cam. It will be added to the code later
+    """
     model_name = ml_config["model_name"]
     device = ml_config["device"]
     
+    ## TODO: add grad-cam
     if model_name == "AlexNet":
         model = AlexNet(num_channels ,num_classes)
         model.image_size = 256
         model.intution_layer = "features"
+        
     if model_name == "ShallowNet":
-
         model = ShallowNet(num_channels ,num_classes) 
         model.image_size = 28
         model.intution_layer = "features"

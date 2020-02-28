@@ -26,6 +26,11 @@ def make_folders(desired_path):
     os.mkdir(desired_path)
     return None
 
+def create_name(arch):
+    run_name = str(datetime.now()) + "_" + arch
+    print("Model Name: %s \n" % run_name)
+    return run_name
+
 def load_json(file_path):
     with open(file_path, 'r') as stream:    
         return json.load(stream)

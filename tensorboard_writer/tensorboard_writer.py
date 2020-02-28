@@ -41,6 +41,7 @@ class TensorBoardSummaryWriter(object):
             results = dict()
             for s in ["train","validation","test"]:
                 
+                # finding the value for the metric and epoch
                 indx = ((df["set"] == s) & (df["metric"] == mt)) & \
                     (df["epoch"] == (epoch + 1))
                 
@@ -57,10 +58,11 @@ class TensorBoardSummaryWriter(object):
             data_loader: data loader from pytorch 
             epoch(int): epoch
         """
-   
+
+        # One sample per class
         idx = data_loader.df.groupby('class')['class'].apply(lambda s: s.sample(1))
         idx = idx.index 
-        # create grid of images
+
         nb_channels = len(data_loader.existing_channels)
         
         for i in range(nb_channels):
@@ -82,7 +84,7 @@ class TensorBoardSummaryWriter(object):
         Add the model to tensorboard. It shows the model architecture
         Args:
             data_loader: data loader from pytorch 
-           model: pytorch model
+            model: pytorch model
         """
         images, _ = select_n_random(data_loader.train_dataset )
         images = images.float() 
@@ -103,6 +105,7 @@ class TensorBoardSummaryWriter(object):
         labels = labels.cpu()
         images = images.to(device)
         images = images.float()
+
         # get the class labels for each image
         class_labels = [data_loader.classes[lab] for lab in labels]
  
@@ -123,7 +126,7 @@ class TensorBoardSummaryWriter(object):
             data_loader: data loader from pytorch 
             model: pytorch model
         """
-        validation_index = data_loader.df["set"] == "validation"
+        validation_index = (data_loader.df["set"] == "validation")
         df_validation =  data_loader.df[validation_index].copy()
 
         for k, cl in enumerate(data_loader.classes,0):

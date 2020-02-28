@@ -42,9 +42,9 @@ def random_crop(image, ratio = 0.8):
 
 def random_rotation(image ):
     """
-    pick a random degree of rotation between 25% on the left and 25% on the right
+    pick a random degree of rotation between 25 degree on 
+    the left and 25 degree on the right
     """
-    
     random_degree = random.uniform(-25, 25)
     return rotate(image, random_degree)
 
@@ -54,13 +54,13 @@ def random_flip(image ):
     """
     random_number = np.random.random()
     if  random_number < 0.25: 
-        return image
+        return image  # no rotation
     elif random_number >= 0.25 and random_number < 0.50:
-        return flipud(image) 
+        return flipud(image) # vertical flip
     elif random_number >= 0.50 and random_number < 0.75:
-        return fliplr(image)
+        return fliplr(image) # horizontal flip
     else: 
-        return flipud(fliplr(image))
+        return flipud(fliplr(image)) # vertical & horizontal flip
 
 def data_augmentation(image, aug):
     """
@@ -140,10 +140,6 @@ def data_mapping(image, statistics, method):
     return image
 
 
-
-
-
-
 class Dataset_Generator(Dataset):
     """Dataset_Generator"""
 
@@ -151,8 +147,15 @@ class Dataset_Generator(Dataset):
                     reshape_size = 64, data_map = [], statistics = None , augmentation = []):
         """
         Args:
-            csv_file (string): Path to the csv file with annotations.
             data_dir (string): Directory with all the images. 
+            df(pandas df): dataframe including the files, labels etc. 
+            channels(list): the existing channels in the data_dir
+            set_type(str): train, test, or validation
+            reshape_size(int): the reshape size for images
+            data_map(list): list of data transofrmations done before the training
+            statistics(dict): dict of statistcis of the training set. It can be 
+                              used for data mapping
+            augmentation(list): list of the augmentations done on the data
         """
         self.df = df.copy().reset_index(drop = True)
         
@@ -177,9 +180,11 @@ class Dataset_Generator(Dataset):
 
         image_path = str(self.df.loc[idx,"file"])
 
+        # creating the image
         image = imread(image_path)
         image = np.zeros((image.shape[0], image.shape[1], len(self.channels)), dtype = np.float64)
 
+        # filling the image with different channels 
         for ch in range(0,len(self.channels) ): 
             img_name = str(self.df.loc[idx,"file"]).replace(self.channels[0], self.channels[ch])                      
             image_dummy = imread(img_name).astype(np.float64)
@@ -190,14 +195,16 @@ class Dataset_Generator(Dataset):
         
         image = resize(image , (self.reshape_size, self.reshape_size, len(self.channels)) ) 
 
+        # transposeing from HWC to CHW for pytorch
         image = image.transpose(2,0,1)
+
+        # map numpy array to tensor
         image = torch.from_numpy(np.flip(image,axis=0).copy() ) 
         
         for dm in self.data_map:
             image = data_mapping(image, self.statistics, dm)
             
         label = self.df.loc[idx,"label"]
-        
         label = np.array([label]) 
         
         sample = {'image': image , 'label': torch.from_numpy(label) , "idx":idx }

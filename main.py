@@ -5,8 +5,10 @@ def main(configs):
     This is the main function which includes the main logic of the script.
     
     Args    
-        configs: dictionary file with the format of the config file
+        configs: dictionary file with the format of the config file. a sample
+                 file can be find at ./configs/sample-config.json
     """
+    # seperating the configs part
     data_configs = configs["data"]
     ml_configs = configs["machine_learning"]
     validation_configs = configs["validation"]
@@ -18,8 +20,7 @@ def main(configs):
     checkpoint = get_checkpoint(ml_configs["checkpoint_path"])
 
     # creating a unique name for the model
-    run_name = str(datetime.now()) + "_" + \
-                    ml_configs["model_name"] + "_bs_" + str(data_configs["batch_size"])
+    run_name = create_name( ml_configs["model_name"]  )
                          
     # creating the tensorboard
     writer = TensorBoardSummaryWriter( os.path.join(tensorboard_path, run_name ) )
@@ -38,10 +39,10 @@ def main(configs):
     number_of_classes = len(data_loader.nb_per_class.keys())
 
     # initialize the model
-    model = get_model(ml_configs,
-                                                    checkpoint,
-                                                    number_of_channels ,
-                                                    number_of_classes)
+    model = get_model(  ml_configs,
+                        checkpoint,
+                        number_of_channels ,
+                        number_of_classes)
     
     data_loader.data_loader(model.image_size, checkpoint)
 
@@ -53,9 +54,6 @@ def main(configs):
     ## load the loss
     criterion = get_loss(ml_configs) 
 
-
-    
-    
     # train the model and record the results in the metric_dataframe
     model, metric_dataframe = train(model,   
                                     data_loader, 
@@ -94,6 +92,6 @@ if __name__ == "__main__":
     
     configs = load_json(args['config'])
     for k in configs:
-        print((k,configs[k]))
+        print("%s : %s \n" % (k,configs[k]))
     main(configs)
 
