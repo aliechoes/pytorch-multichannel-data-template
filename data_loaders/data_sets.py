@@ -113,7 +113,7 @@ def map_minus_one_to_one(x, a, b):
     y[y<-1] = -1
     return y
 
-def data_mapping(image, statistics, methods):
+def data_mapping(image, statistics, method):
     """
     gets the image, statistics and the mapping method and according to the 
     method, chooses the right function
@@ -123,23 +123,20 @@ def data_mapping(image, statistics, methods):
                             and the max of the *whole training data*
         methods(list)     :   the method which will be used for mapping the image
     """
-
-    for m in methods:
-
-        if m == "normalize":
+    if method == "normalize":
             image = transforms.Normalize(statistics["mean"] , statistics["std"] )(image) 
-        elif m == "map_zero_one":
-            for ch in range(image.shape[0]):
-                a = statistics["lower_bound"][ch]
-                b = statistics["upper_bound"][ch]
-                image[ch,:,:] = map_zero_one(image[ch,:,:], a, b)
-        elif m == "map_minus_one_to_one":
-            for ch in range(image.shape[0]):
-                a = statistics["lower_bound"][ch]
-                b = statistics["upper_bound"][ch]
-                image[ch,:,:] = map_minus_one_to_one(image[ch,:,:], a, b)
-        else:
-            raise Exception('Wrong mapping function')
+    elif method == "map_zero_one":
+        for ch in range(image.shape[0]):
+            a = statistics["lower_bound"][ch]
+            b = statistics["upper_bound"][ch]
+            image[ch,:,:] = map_zero_one(image[ch,:,:], a, b)
+    elif method == "map_minus_one_to_one":
+        for ch in range(image.shape[0]):
+            a = statistics["lower_bound"][ch]
+            b = statistics["upper_bound"][ch]
+            image[ch,:,:] = map_minus_one_to_one(image[ch,:,:], a, b)
+    else:
+        raise Exception('Wrong mapping function')
     return image
 
 
@@ -151,7 +148,7 @@ class Dataset_Generator(Dataset):
     """Dataset_Generator"""
 
     def __init__(self,  data_dir,    df , channels , set_type ,
-                    reshape_size = 64, data_map = None, statistics = None , augmentation = []):
+                    reshape_size = 64, data_map = [], statistics = None , augmentation = []):
         """
         Args:
             csv_file (string): Path to the csv file with annotations.
@@ -196,8 +193,8 @@ class Dataset_Generator(Dataset):
         image = image.transpose(2,0,1)
         image = torch.from_numpy(np.flip(image,axis=0).copy() ) 
         
-        if self.data_map is not None:
-            image = data_mapping(image, self.statistics, self.data_map)
+        for dm in self.data_map:
+            image = data_mapping(image, self.statistics, dm)
             
         label = self.df.loc[idx,"label"]
         

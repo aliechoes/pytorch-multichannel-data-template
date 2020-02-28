@@ -5,7 +5,7 @@
 		"batch_size": 64,
 		"validation_split": 0.3,
 		"test_split": 0.3,
-		"data_map": "normalize",
+		"data_map": ["normalize"],
 		"augmentation": ["random_rotation"]
 	},
 
@@ -13,10 +13,10 @@
 		"model_name": "ShallowNet",
 		"num_epochs": 100,
     "device": "cpu",
-    "checkpoint_path": "/home/ali/code/runs/mnist/2020-02-26 10:43:44.577048_ShallowNet_bs_64/models/epoch_50.pth",
+    "checkpoint_path": null,
 		"optimization_parameters": {
 			"lr": 0.001,
-			"weight_decay": 0.1
+			"weight_decay": 0.0001
 		},
 		"optimization_method": "adam",
 		"loss_function": "nll_loss"
