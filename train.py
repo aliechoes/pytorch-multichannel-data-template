@@ -2,11 +2,12 @@
 import torch
 import torchvision
 import torch.nn.functional as F
+import torch.nn as nn 
 from machine_learning.metrics import metric_history
 import time
 import os
 import pandas as pd
-
+ 
 
 def elapsed_time_print(start_time, message, epoch):
     """
@@ -167,8 +168,13 @@ def train(  model,
                 print("The training has stopped as the early stopping is triggered")
                 break
     
-    
-    writer.add_embedding( model, data_loader, epoch, device)
+    ## the feature extractor only can be done when the weights are calculated.
+    # the formula to get the feature extractor is included in th model.embedding_generator 
+    # however, it has to be evaluated separately and cannot be part of the model as 
+    # pytorch makes mistakes with new architecures in the model
+
+    feature_extractor = eval(model.embedding_generator)
+    writer.add_embedding( feature_extractor, data_loader, epoch, device)
     writer.add_graph(model, data_loader)
     print('Finished Training')
     return  model, metric_dataframe 

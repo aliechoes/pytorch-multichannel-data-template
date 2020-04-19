@@ -92,7 +92,7 @@ class TensorBoardSummaryWriter(object):
         self.writer.add_graph(model.cpu(), images.cpu())
         self.writer.close()
     
-    def add_embedding(self, model, data_loader, epoch, device):
+    def add_embedding(self, feature_extractor, data_loader, epoch, device):
         """
         gets the model and outpus n random images features to tensorboard projector
         Args:
@@ -108,8 +108,10 @@ class TensorBoardSummaryWriter(object):
 
         # get the class labels for each image
         class_labels = [data_loader.classes[lab] for lab in labels]
- 
-        features = model.embedding_generator(images)
+        
+        features = feature_extractor(images)
+        features = features.reshape(features.shape[0], features.shape[1] )
+        
         images_shape = (images.shape[0], 1,  images.shape[2]  , images.shape[3] )
         for j in range(images.shape[1]):
             self.writer.add_embedding(tag = "Channel " + str(j+1),
