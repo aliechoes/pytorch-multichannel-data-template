@@ -1,10 +1,20 @@
 
 import torch
 import torchvision
+from torchvision.models import alexnet
 import torch.nn as nn
 import torch.nn.functional as F
 
+def pretrained_weights(model, weights):
 
+    # in our code, it is always the last layer will be classifier 
+    # and before that it is embedding
+    for w in list(weights.keys())[0:-1]:
+        layer_name = w
+        if 'classifier' in w:
+            layer_name = layer_name.replace('classifier', 'embedding')
+        model.state_dict()[layer_name] = weights[w]
+    return model
 
 class ShallowNet(nn.Module):
     def __init__(self,num_channels ,num_classes):
@@ -115,7 +125,13 @@ def get_model(ml_config, checkpoint ,num_channels ,num_classes ):
     if model_name == "AlexNet":
         model = AlexNet(num_channels ,num_classes)
         model.image_size = 256
-        model.intution_layer = "features"
+        model.intuition_layer = "features"
+        ## loading the imagenet weights in case it is possible
+        if num_channels == 3:
+            print("imagenet pretrained weights have been used")
+            model = pretrained_weights(model, 
+                        alexnet(pretrained=True).state_dict())
+
         
     if model_name == "ShallowNet":
         model = ShallowNet(num_channels ,num_classes) 
