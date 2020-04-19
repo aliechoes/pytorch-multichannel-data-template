@@ -102,7 +102,7 @@ def train(  model,
 
             # print loss every 5 minibatches
             if i % 5 == 4:
-                print('[epoch: %d, minibatch %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 5))
+                print('[epoch: %d, minibatch %5d] loss: %.3f' % (epoch, i + 1, running_loss / 5))
                 running_loss = 0.0
         elapsed_time_print(start_time, "Training took %s", epoch)
 
