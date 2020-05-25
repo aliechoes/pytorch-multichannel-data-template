@@ -187,7 +187,7 @@ class Dataset_Generator(Dataset):
         # filling the image with different channels 
         for ch in range(0,len(self.channels) ): 
             img_name = str(self.df.loc[idx,"file"]).replace(self.channels[0], self.channels[ch])                      
-            image_dummy = imread(img_name).astype(np.float64)
+            image_dummy = imread(img_name).astype(np.float64) / 4095.
             image[:,:,ch] = image_dummy
             
         for aug in self.augmentation:

@@ -83,3 +83,5 @@ DATETIME_NOW + _ + MODEL
 - [x] add early stopping
 - [x] add feature extration
 - [x] add batch size for faster model evaluation
+- [ ] add scaling for data
+- [ ] add folder for test data

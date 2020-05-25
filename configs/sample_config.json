@@ -2,6 +2,7 @@
 	"data": {
 
 		"data_dir": "./sample_data/mnist/",
+		"test_data_dir": null,
 		"batch_size": 64,
 		"validation_split": 0.3,
 		"test_split": 0.3,
