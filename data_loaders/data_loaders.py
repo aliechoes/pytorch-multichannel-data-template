@@ -147,7 +147,7 @@ class DataLoaderGenerator():
         self.classes = finding_classes(self.data_dir)
         self.existing_channels = finding_channels(  self.classes, 
                                                     self.data_dir)
-
+        print("Existing Channels: {}".format(self.existing_channels))
         self.nb_per_class = number_of_files_per_class(  self.classes, 
                                                         self.data_dir, 
                                                         self.existing_channels)

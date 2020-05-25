@@ -24,6 +24,12 @@ def get_optimizer(  ml_configs,
                                         lr=lr,
                                         weight_decay=weight_decay) 
     
+    if optimization_method=="rmsprop": 
+        lr = parameters["lr"] 
+        weight_decay = parameters["weight_decay"] 
+        optimizer = torch.optim.RMSprop(model.parameters(), 
+                                        lr=lr,
+                                        weight_decay=weight_decay)     
     # transfer learning
     if checkpoint is not None:
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
