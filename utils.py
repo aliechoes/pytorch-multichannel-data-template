@@ -4,6 +4,10 @@ import argparse
 from datetime import datetime
 import os
 import json
+import itertools
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from data_loaders.data_loaders import DataLoaderGenerator
@@ -16,11 +20,11 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # fix random seeds for reproducibility
-SEED = 123
-torch.manual_seed(SEED)
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-np.random.seed(SEED)
+#SEED = 123
+#torch.manual_seed(SEED)
+torch.backends.cudnn.deterministic = False
+torch.backends.cudnn.benchmark = True
+#np.random.seed(SEED)
 
 def make_folders(desired_path):
     os.mkdir(desired_path)

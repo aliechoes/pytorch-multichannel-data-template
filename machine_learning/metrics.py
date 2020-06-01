@@ -49,14 +49,26 @@ def metric_history(df, metric_dataframe, epoch, metrics_of_interest ):
                 metric_dataframe = metric_dataframe.append(results_temp, ignore_index=True)
   
         
-        if "dice" in metrics_of_interest:
+        if "f1_macro" in metrics_of_interest:
             results_temp = {
                 'epoch': epoch+1,
                 'set':   s,
-                'metric': 'dice',
+                'metric': 'f1_macro',
                 'value': f1_score(y_true, y_pred, average='macro' ) 
             }
-            print("dice for the %s set is: %f" % (s, f1_score(y_true, y_pred, average='macro' ) ) )
+            print("f1_macro for the %s set is: %f" % (s, f1_score(y_true, y_pred, average='macro' ) ) )
             metric_dataframe = metric_dataframe.append(results_temp, ignore_index=True)
+          
+        
+        if "f1_weighted" in metrics_of_interest:
+            results_temp = {
+                'epoch': epoch+1,
+                'set':   s,
+                'metric': 'f1_weighted',
+                'value': f1_score(y_true, y_pred, average='weighted' ) 
+            }
+            print("f1_weighted for the %s set is: %f" % (s, f1_score(y_true, y_pred, average='weighted' ) ) )
+            metric_dataframe = metric_dataframe.append(results_temp, ignore_index=True)
+
     print(4*"---")
     return metric_dataframe

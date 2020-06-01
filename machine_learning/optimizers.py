@@ -18,12 +18,13 @@ def get_optimizer(  ml_configs,
     parameters = ml_configs["optimization_parameters"]
 
     if optimization_method=="adam": 
-        lr = parameters["lr"] 
-        weight_decay = parameters["weight_decay"] 
-        optimizer = torch.optim.Adam(model.parameters(), 
-                                        lr=lr,
-                                        weight_decay=weight_decay) 
+        optimizer = torch.optim.Adam(model.parameters(),**parameters) 
     
+    if optimization_method=="rmsprop": 
+        optimizer = torch.optim.RMSprop(model.parameters(), **parameters)  
+
+    if optimization_method=="sgd": 
+        optimizer = torch.optim.SGD(model.parameters(),**parameters)  
     # transfer learning
     if checkpoint is not None:
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])

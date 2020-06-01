@@ -143,7 +143,7 @@ def data_mapping(image, statistics, method):
 class Dataset_Generator(Dataset):
     """Dataset_Generator"""
 
-    def __init__(self,  data_dir,    df , channels , set_type ,
+    def __init__(self,   df , channels , set_type , scaling_factor = 255 ,
                     reshape_size = 64, data_map = [], statistics = None , augmentation = []):
         """
         Args:
@@ -162,8 +162,7 @@ class Dataset_Generator(Dataset):
         # just using the set of interest
         if set_type is not None:
             self.df = self.df[self.df["set"]==set_type].reset_index(drop = True) 
-        
-        self.data_dir = data_dir 
+        self.scaling_factor = scaling_factor
         self.reshape_size = reshape_size
         self.channels = channels
         self.statistics = statistics 
@@ -186,8 +185,8 @@ class Dataset_Generator(Dataset):
 
         # filling the image with different channels 
         for ch in range(0,len(self.channels) ): 
-            img_name = str(self.df.loc[idx,"file"]).replace(self.channels[0], self.channels[ch])                      
-            image_dummy = imread(img_name).astype(np.float64)
+            img_name = str(self.df.loc[idx,"file"]).replace(self.channels[0]+".", self.channels[ch]+".")                    
+            image_dummy = imread(img_name).astype(np.float64) / float(self.scaling_factor)
             image[:,:,ch] = image_dummy
             
         for aug in self.augmentation:

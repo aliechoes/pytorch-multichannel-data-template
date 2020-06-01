@@ -1,0 +1,21 @@
+
+
+{
+	"machine_learning": {
+		"checkpoint_path": "/pstore/home/shetabs1/runs/cell_cycle/2020-05-28 23:25:58.110737_densenet121/models/best_model.pth" ,
+		"device": "cuda",
+		"optimization_method": "adam",
+		"model_name": "densenet121" 
+	}, 
+	"data": {
+		"data_dir": "/pstore/home/shetabs1/data/Exp12_labeled_images/Donor3/",
+		"test_split": 0.3,
+		"batch_size": 64,
+		"data_map": ["normalize"],
+		"validation_split": 0.2,
+		"test_data_dir": null,
+		"augmentation": [],
+        "scaling_factor": 4095,
+        "output_folder": "/pstore/home/shetabs1/"
+	}
+}

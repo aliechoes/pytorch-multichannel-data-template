@@ -6,6 +6,45 @@ import torchvision
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets, transforms
 import torch.nn.functional as F
+from sklearn.metrics import confusion_matrix
+
+import itertools
+import numpy as np
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
+
+
+def plot_confusion_matrix(cm, class_names):
+    """
+    Returns a matplotlib figure containing the plotted confusion matrix.
+
+    Args:
+        cm (array, shape = [n, n]): a confusion matrix of integer classes
+        class_names (array, shape = [n]): String names of the integer classes
+    """
+    figure = plt.figure(figsize=(8, 8))
+    plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+    plt.title("Confusion matrix")
+    #plt.colorbar()
+    tick_marks = np.arange(len(class_names))
+    plt.xticks(tick_marks, class_names, rotation=45)
+    plt.yticks(tick_marks, class_names)
+
+    # Normalize the confusion matrix.
+    cm = np.around(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis], decimals=2)
+
+    # Use white text if squares are dark; otherwise black.
+    threshold = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        color = "white" if cm[i, j] > threshold else "black"
+        plt.text(j, i, cm[i, j], horizontalalignment="center", color=color)
+
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    return figure
+
 
 # helper function
 def select_n_random(train_dataset , n=200):
@@ -76,7 +115,22 @@ class TensorBoardSummaryWriter(object):
             
             self.writer.add_images( "Channel"+str(i+1), temp_images, epoch )
             self.writer.close()
- 
+
+    
+    def add_confusion_matrix(self,  data_loader, epoch ):
+        """
+        Add confusion matrix images to tensorboard 
+        Args:
+            data_loader: data loader from pytorch 
+            epoch(int): epoch
+        """
+
+        # One sample per class
+        validation_index = (data_loader.df["set"] == "validation")
+        df_validation =  data_loader.df[validation_index].copy()
+        cm = confusion_matrix(df_validation["label"].astype(int), df_validation["prediction"].astype(int))
+
+        self.writer.add_figure("Confusion Matrix",plot_confusion_matrix(cm, data_loader.classes), global_step=epoch ) 
         
 
     def add_graph(self, model, data_loader ):
@@ -92,7 +146,7 @@ class TensorBoardSummaryWriter(object):
         self.writer.add_graph(model.cpu(), images.cpu())
         self.writer.close()
     
-    def add_embedding(self, model, data_loader, epoch, device):
+    def add_embedding(self, feature_extractor, data_loader, epoch, device):
         """
         gets the model and outpus n random images features to tensorboard projector
         Args:
@@ -108,8 +162,10 @@ class TensorBoardSummaryWriter(object):
 
         # get the class labels for each image
         class_labels = [data_loader.classes[lab] for lab in labels]
- 
-        features = model.embedding_generator(images)
+        
+        features = feature_extractor(images)
+        features = features.reshape(features.shape[0], features.shape[1] )
+        
         images_shape = (images.shape[0], 1,  images.shape[2]  , images.shape[3] )
         for j in range(images.shape[1]):
             self.writer.add_embedding(tag = "Channel " + str(j+1),
@@ -131,10 +187,33 @@ class TensorBoardSummaryWriter(object):
 
         for k, cl in enumerate(data_loader.classes,0):
             probabilities = (df_validation.loc[:, cl + "_probability"]  ).to_numpy()
-            predictions = (df_validation["prediction"] == k).to_numpy()
+            labels = (df_validation["label"] == k).to_numpy()
             self.writer.add_pr_curve(cl,
-                        predictions,
+                        labels,
                         probabilities,
                         global_step=epoch)
 
- 
+    def add_hparams(self, configs, best_value, best_epoch, optimizer_state_dict):
+        """
+        outputs the hyperparameters to tensorboard.
+        Args:
+            configs: dict
+        """
+        hparam_dict = dict()
+        hparam_dict["data_dir"] = configs["data"]["data_dir"]
+        hparam_dict["test_data_dir"] = configs["data"]["test_data_dir"]
+        hparam_dict["batch_size"] = configs["data"]["batch_size"]
+        hparam_dict["model_name"] = configs["machine_learning"]["model_name"]
+        hparam_dict["optimization_method"] = configs["machine_learning"]["optimization_method"]
+        hparam_dict["loss_function"] = configs["machine_learning"]["loss_function"]
+        hparam_dict["criteria"] = configs["validation"]["call_back"]["criteria"]
+        hparam_dict["best_epoch"] = best_epoch
+        hparam_dict["lr"] = configs["machine_learning"]["optimization_parameters"]["lr"]
+        hparam_dict["weight_decay"] =  configs["machine_learning"]["optimization_parameters"]["weight_decay"]
+                
+        metric_dict = dict()  
+        metric_dict["hparam/" + hparam_dict["criteria"]] = best_value
+        print(hparam_dict)
+        print(metric_dict)
+        self.writer.add_hparams(hparam_dict, metric_dict) 
+        self.writer.close()
