@@ -11,8 +11,11 @@ def get_loss(ml_configs):
         ml_config(dict): machine learning config
     """
     loss_function = ml_configs["loss_function"]
-    if loss_function=="mse":
+    
+    if loss_function=="MSELoss":
         criterion = nn.MSELoss() 
-    elif loss_function== "nll_loss": 
+    elif loss_function== "NLLLoss": 
         criterion = nn.NLLLoss()
+    elif loss_function== "CrossEntropyLoss":
+        criterion = nn.CrossEntropyLoss()
     return criterion

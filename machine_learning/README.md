@@ -20,7 +20,7 @@ For adding new metrics, you can simply add your model in the file [metrics.py](m
 
 - [accuracy](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html)
 - [cross_entropy](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.log_loss.html)
-- [dice](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html)
+- [f1_score](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html)
 
 ## Losses
 

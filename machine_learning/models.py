@@ -1,7 +1,7 @@
 
 import torch
 import torchvision
-from torchvision.models import alexnet, resnet18
+from torchvision.models import alexnet, resnet18, densenet121
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -15,6 +15,41 @@ def pretrained_weights(model, weights):
             layer_name = layer_name.replace('classifier', 'embedding')
         model.state_dict()[layer_name] = weights[w]
     return model
+
+class Flatten(nn.Module):
+    def __init__(self):
+        super(Flatten, self).__init__()
+
+    def forward(self, x):
+        x = x.view(x.size(0), -1)
+        return x
+
+class LeNet(nn.Module):
+    def __init__(self,num_channels ,num_classes, droprate=0.5):
+        super(LeNet, self).__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(num_channels,  20, kernel_size=5, padding=2),
+            nn.ReLU(inplace=True),
+            nn.Dropout2d(p=droprate),
+            nn.MaxPool2d(2, stride=2),
+            nn.Conv2d(20, 50, kernel_size=5, padding=2),
+            nn.ReLU(inplace=True),
+            nn.Dropout2d(p=droprate),
+            nn.MaxPool2d(2, stride=2), 
+            nn.Flatten() 
+        )
+
+        self.classifier= nn.Sequential(
+            nn.Linear(12800, 500),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=droprate),
+            nn.Linear(500, num_classes)
+        ) 
+        
+    def forward(self, x):
+        x = self.features(x)
+        x = self.classifier(x)
+        return x
 
 class ShallowNet(nn.Module):
     def __init__(self,num_channels ,num_classes):
@@ -90,10 +125,31 @@ def get_model(ml_config, checkpoint ,num_channels ,num_classes ):
         model.intution_layer = "features"
         model.embedding_generator = "nn.Sequential( model.features, \
                                                     model.classifier[:-1])"
-    
+
+    if model_name == "lenet":
+        model = LeNet(num_channels ,num_classes) 
+        model.image_size = 64
+        model.intution_layer = "features"
+        model.embedding_generator = "nn.Sequential( model.features, \
+                                                    model.classifier[:-1])"
+    ## TODO: add grad-cam
+    if model_name == "densenet121":
+        model = densenet121(pretrained=True, drop_rate = 0.5)
+        model.image_size = 224
+        model.intuition_layer = "features"
+        ## loading the imagenet weights in case it is possible
+        if num_channels != 3:
+            model.features.conv0 = nn.Conv2d(num_channels, 64, kernel_size=(7, 7), 
+                            stride=(2, 2), padding=(3, 3), bias=False)
+        num_ftrs = model.classifier.in_features
+        model.classifier = nn.Linear(num_ftrs, num_classes)
+        model.embedding_generator = "nn.Sequential(model.features)"
+
+
     # transfer learning
     if checkpoint is not None:
         model.load_state_dict(checkpoint['model_state_dict'])
+        print("preivously trained model is used")
 
     model = model.to(device)
     print(model)

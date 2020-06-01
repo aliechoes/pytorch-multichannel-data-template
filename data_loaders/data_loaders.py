@@ -69,19 +69,21 @@ def input_dataframe_generator(data_dir, test_data_dir ,classes, representing_cha
     ["file"  ,"label", "class", "prediction",  
             "class0_probability" ... "classN_probability"]
     """
-    label = 0
-    df = pd.DataFrame(columns= ["file"  ,"label", "class", "set" ,"prediction"] )
+    
+    df = pd.DataFrame(columns= ["file"  ,"label", "class", "set","uncertainty" ,"prediction"] )
     if test_data_dir != None:
         data_directory = {"train" : data_dir, "test" : test_data_dir}
     else:
         data_directory = {"train" : data_dir}
     
     for dd in data_directory:
+        label = 0
         for cl in classes:
             df_dummy = pd.DataFrame(columns= ["file" ,"label", "class", "set","prediction"]  )
             df_dummy["file"] = glob.glob(os.path.join(data_directory[dd] , cl, "*_" + representing_channel + "*") ) 
             df_dummy["label"] = label
             df_dummy["class"] = cl
+            df_dummy["uncertainty"] = -1.
             df_dummy["prediction"] = -1.
             df_dummy["set"] = dd
             df = df.append(df_dummy, ignore_index=True)
@@ -97,8 +99,7 @@ def train_validation_test_split(df, validation_size= 0.2 , test_size = 0.3 ,
     This functions gets the dataframe and creates train, validation and test 
     split. it adds a new column: "set"
     """
-    if (df["set"] == "test").count() == 0:
-
+    if (df["set"] == "test").sum() == 0:
         X_train, X_test = train_test_split(df["label"], test_size=test_size, 
                                         random_state=314)
 
@@ -108,12 +109,10 @@ def train_validation_test_split(df, validation_size= 0.2 , test_size = 0.3 ,
         df.loc[X_validation.index,"set"] = "validation"
         df.loc[X_test.index,"set"] = "test"
     else: 
-        
         _, X_validation = train_test_split(df.loc[df["set"]=="train" , "set"], test_size=validation_size, 
                                         random_state=314)
 
         df.loc[X_validation.index,"set"] = "validation"
-
     return df
 
 
@@ -131,6 +130,7 @@ class DataLoaderGenerator():
         self.test_split = data_configs["test_split"]
         self.data_map = data_configs["data_map"]
         self.augmentation = data_configs["augmentation"]
+        self.scaling_factor = data_configs["scaling_factor"]
         
     def data_frame_creator(self):
         """
@@ -179,10 +179,10 @@ class DataLoaderGenerator():
             self.statistics["upper_bound"] = checkpoint["statistics"]["upper_bound"]
             self.statistics["max"] = checkpoint["statistics"]["max"]
         else:
-            train_dataset = Dataset_Generator(  self.data_dir,  
-                                                self.df , 
+            train_dataset = Dataset_Generator(  self.df , 
                                                 self.existing_channels , 
                                                 "train" , 
+                                                self.scaling_factor, 
                                                 self.reshape_size )
             
             trainloader = DataLoader(   train_dataset, \
@@ -233,10 +233,11 @@ class DataLoaderGenerator():
         self.calculate_statistics(checkpoint)
         print("Calculating the statistics is finished \n")
 
-        self.train_dataset = Dataset_Generator(self.data_dir,  
+        self.train_dataset = Dataset_Generator( 
                                             self.df , 
                                             self.existing_channels ,  
                                             "train" , 
+                                            self.scaling_factor,
                                             self.reshape_size , 
                                             self.data_map, 
                                             self.statistics,
@@ -247,10 +248,11 @@ class DataLoaderGenerator():
                                 shuffle=True, 
                                 num_workers=4)
                                 
-        self.validation_dataset = Dataset_Generator(self.data_dir,  
+        self.validation_dataset = Dataset_Generator( 
                                             self.df , 
                                             self.existing_channels ,  
                                             None , 
+                                            self.scaling_factor,
                                             self.reshape_size , 
                                             self.data_map, 
                                             self.statistics,

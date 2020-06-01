@@ -24,7 +24,8 @@ def main(configs):
                          
     # creating the tensorboard
     writer = TensorBoardSummaryWriter( os.path.join(tensorboard_path, run_name ) )
-
+    
+    
     # creating the folder for the models to be saved per epoch
     model_folder = os.path.join(tensorboard_path, run_name, "models/")
     make_folders(model_folder)
@@ -33,7 +34,6 @@ def main(configs):
     # creating the dataloader
     data_loader = DataLoaderGenerator(data_configs) 
     data_loader.data_frame_creator()
-    
     # number of exsting channels and output classes
     number_of_channels = len(data_loader.existing_channels)
     number_of_classes = len(data_loader.nb_per_class.keys())
@@ -60,10 +60,9 @@ def main(configs):
                                     optimizer,
                                     criterion,  
                                     writer, 
-                                    model_folder, 
-                                    ml_configs, 
-                                    validation_configs)
-
+                                    model_folder,
+                                    configs)
+    
     # save the dataset with train/validation/test per epoch
     output_folder = os.path.join(tensorboard_path, run_name, "output_files/")
     make_folders(output_folder)

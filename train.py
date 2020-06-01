@@ -42,9 +42,8 @@ def train(  model,
             optimizer,
             criterion,  
             writer, 
-            model_folder, 
-            ml_configs, 
-            validation_configs):
+            model_folder,
+            configs):
     """
     the function which trains the model and evaluates it over the whole dataset
     Args:
@@ -64,12 +63,13 @@ def train(  model,
         device(str): either cpu or cuda
     """
 
-    saving_period = validation_configs["call_back"]["saving_period"]
-    patience = validation_configs["call_back"]["patience"]
-    criteria = validation_configs["call_back"]["criteria"]
-    metrics_of_interest = validation_configs["metrics_of_interest"]
-    num_epochs = ml_configs["num_epochs"]
-    device =  ml_configs["device"]
+    saving_period = configs["validation"]["call_back"]["saving_period"]
+    patience = configs["validation"]["call_back"]["patience"]
+    criteria = configs["validation"]["call_back"]["criteria"]
+    best_criteria_value = 0
+    metrics_of_interest = configs["validation"]["metrics_of_interest"]
+    num_epochs = configs["machine_learning"]["num_epochs"]
+    device =  configs["machine_learning"]["device"]
 
     # creating a dataframe which will contain all the metrics per set per epoch
     metric_dataframe = pd.DataFrame(columns= ["epoch","set", "metric", "value"])
@@ -108,11 +108,11 @@ def train(  model,
         elapsed_time_print(start_time, "Training took %s", epoch)
 
         # saving the model
-        if  epoch % saving_period == (saving_period - 1):
+        if  epoch % saving_period == (saving_period ):
             start_time = time.time()
-            model_path = os.path.join(model_folder, "epoch_" + str(epoch + 1) + ".pth" )
+            model_path = os.path.join(model_folder, "epoch_" + str(epoch ) + ".pth" )
             torch.save({
-                'epoch': epoch + 1,
+                'epoch': epoch,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': loss ,
@@ -154,10 +154,36 @@ def train(  model,
                             metrics_of_interest )
 
             writer.add_metrics(metric_dataframe,metrics_of_interest ,epoch)
-            writer.add_images( data_loader, epoch )
-            writer.add_pr_curve( data_loader, epoch )
 
         elapsed_time_print(start_time, "Evaluating Model took %s", epoch)
+
+        # TODO saving the best model so far
+        indx =  (metric_dataframe["set"] == "validation") & \
+                        (metric_dataframe["metric"] == criteria )
+        current_criteria_value = metric_dataframe.loc[indx, "value"].iloc[-1]
+        
+        if best_criteria_value < current_criteria_value:
+            #writer.add_images( data_loader, epoch )
+            writer.add_pr_curve( data_loader, epoch )
+            writer.add_confusion_matrix( data_loader, epoch ) 
+
+            best_epoch = epoch
+            best_criteria_value = current_criteria_value
+            start_time = time.time()
+            model_path = os.path.join(model_folder, "best_model.pth" )
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': loss ,
+                'channels': data_loader.existing_channels,
+                'statistics': data_loader.statistics,
+                'criteria': criteria,
+                'current_criteria_value': current_criteria_value,
+                'data_map': data_loader.data_map
+            }, model_path)  
+            elapsed_time_print(start_time, "Saving the best Model took %s", epoch)
+
 
         # check for early stopping
         if epoch > 1.5*patience:
@@ -172,9 +198,14 @@ def train(  model,
     # the formula to get the feature extractor is included in th model.embedding_generator 
     # however, it has to be evaluated separately and cannot be part of the model as 
     # pytorch makes mistakes with new architecures in the model
-
-    feature_extractor = eval(model.embedding_generator)
-    writer.add_embedding( feature_extractor, data_loader, epoch, device)
-    writer.add_graph(model, data_loader)
+    for i in range(10):
+        try:
+            writer.add_hparams(configs, best_criteria_value, best_epoch, optimizer.state_dict() )
+            break
+        except:
+            print("there is a problem with hparam")
+    #feature_extractor = eval(model.embedding_generator)
+    #writer.add_embedding( feature_extractor, data_loader, epoch, device)
+    #writer.add_graph(model, data_loader)
     print('Finished Training')
     return  model, metric_dataframe 
