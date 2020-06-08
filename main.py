@@ -20,7 +20,9 @@ def main(configs):
     checkpoint = get_checkpoint(ml_configs["checkpoint_path"])
 
     # creating a unique name for the model
-    run_name = create_name( ml_configs["model_name"]  )
+    run_name = create_name( ml_configs["model_name"], 
+                            ml_configs["optimization_method"] , 
+                            ml_configs["optimization_parameters"]["lr"] )
                          
     # creating the tensorboard
     writer = TensorBoardSummaryWriter( os.path.join(tensorboard_path, run_name ) )
@@ -52,10 +54,10 @@ def main(configs):
                                 checkpoint) 
     
     ## load the loss
-    criterion = get_loss(ml_configs) 
+    criterion = get_loss(ml_configs, data_loader) 
 
     # train the model and record the results in the metric_dataframe
-    model, metric_dataframe = train(model,   
+    _ , metric_dataframe = train(model,   
                                     data_loader, 
                                     optimizer,
                                     criterion,  

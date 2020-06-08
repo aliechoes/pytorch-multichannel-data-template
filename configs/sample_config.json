@@ -1,1 +1,33 @@
-{"machine_learning": {"checkpoint_path": null, "optimization_parameters": {"weight_decay": 0, "lr": 0.001}, "num_epochs": 200, "device": "cuda", "optimization_method": "adam", "model_name": "densenet121", "loss_function": "CrossEntropyLoss"}, "validation": {"call_back": {"patience": 10, "saving_period": 100, "criteria": "accuracy"}, "metrics_of_interest": ["accuracy", "f1_macro", "f1_weighted", "cross_entropy"], "tensorboard_path": "/pstore/home/shetabs1/runs/cell_cycle"}, "data": {"data_dir": "/pstore/home/shetabs1/data/Exp12_labeled_images/Donor12/", "test_split": 0.3, "batch_size": 64, "data_map": ["normalize"], "validation_split": 0.2, "test_data_dir": "/pstore/home/shetabs1/data/Exp12_labeled_images/Donor3/", "augmentation": ["random_crop", "random_rotation", "random_flip"], "scaling_factor": 4095}}
+{
+	"machine_learning": {
+		"checkpoint_path": null,
+		"optimization_parameters": {
+			"lr": 1e-3
+
+		},
+		"num_epochs": 50,
+		"device": "cuda",
+		"optimization_method": "adam",
+		"model_name": "shallownet",
+        "loss_function": "CrossEntropyLoss",
+        "weights": null
+	},
+	"validation": {
+		"metrics_of_interest": ["accuracy", "f1_macro", "f1_weighted", "cross_entropy"],
+		"tensorboard_path": "/pstore/home/shetabs1/runs/cell_cycle",
+		"call_back": {
+			"patience": 7,
+			"saving_period": 100,
+			"criteria": "f1_weighted"
+		}
+	},
+	"data": {
+		"data_dir": "/pstore/home/shetabs1/code/pytorch-multichannel-data-template/sample_data/mnist", 
+		"batch_size": 1024,
+		"data_map": ["normalize"],
+		"validation_split": 0.25,
+		"test_data_dir": null,
+		"augmentation": ["random_crop","random_rotation", "random_flip"],
+		"scaling_factor": 255
+	}
+}

@@ -30,8 +30,10 @@ def make_folders(desired_path):
     os.mkdir(desired_path)
     return None
 
-def create_name(arch):
-    run_name = str(datetime.now()) + "_" + arch
+def create_name(arch, optimization_method, lr):
+    run_name = str(datetime.now()) +    "_" + arch + \
+                                        "_" + optimization_method + \
+                                        "_" + str(lr)
     print("Model Name: %s \n" % run_name)
     return run_name
 

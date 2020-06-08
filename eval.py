@@ -63,13 +63,14 @@ def predict(configs):
     model = get_model(  ml_configs,
                         checkpoint,
                         number_of_channels ,
-                        number_of_classes)
+                        9)
 
     data_loader.data_loader(model.image_size, checkpoint)
     
     for j in range(100):
         data_loader.df["prediction_" + str(j)] = -1
     # the evaluation phase
+ 
     print("starting the evaluation")
     with torch.no_grad():  
         model.eval()
@@ -103,7 +104,12 @@ def predict(configs):
                 outputs = model(inputs)   
                 _, predicted = torch.max(outputs.data, 1)    
                 data_loader.df.loc[idx, "prediction_" + str(j)] = predicted.cpu().numpy()
-
+            if i % 10 == 0: 
+                print(
+                'Eval: [{}/{} ({:.0f}%)]'.
+                format(i * len(inputs), len(data_loader.validation_dataset),
+                       100. * i / len(data_loader.validationloader) )) 
+        
         mode = data_loader.df.loc[:, [("prediction_" + str(j)) for j in range(100) ] ].mode(axis = 1)[0]
         for i in range(0,data_loader.df.shape[0]):
             data_loader.df.loc[i,"uncertainty"] = 1. - ((data_loader.df.loc[i, [("prediction_" + str(j)) for j in range(100) ] ] == mode[i]).sum())/100.
@@ -111,6 +117,14 @@ def predict(configs):
         # save the label of all images and their predictions
         data_loader.df.to_csv(os.path.join(output_folder,
                                         "granular_results.csv"), index = False)
+        for cl in data_loader.classes:
+            indx = (data_loader.df["class"] == cl)
+            files = data_loader.df.loc[indx, "file"]
+            files = files.str.replace(configs["data"]["data_dir"], "")
+            files = files.str.replace(cl, "")
+            files = files.str.replace("/Exp14_Donor1_Minus_SEA_", "")
+            files = files.str.replace("_Ch1.ome.tif", "")
+            files.to_csv("/pstore/home/shetabs1/" + cl + ".pop", index=False)
 
 
 

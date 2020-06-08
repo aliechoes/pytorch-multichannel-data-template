@@ -32,7 +32,7 @@ def plot_confusion_matrix(cm, class_names):
     plt.yticks(tick_marks, class_names)
 
     # Normalize the confusion matrix.
-    cm = np.around(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis], decimals=2)
+    #cm = np.around(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis], decimals=2)
 
     # Use white text if squares are dark; otherwise black.
     threshold = cm.max() / 2.
@@ -84,7 +84,8 @@ class TensorBoardSummaryWriter(object):
                 indx = ((df["set"] == s) & (df["metric"] == mt)) & \
                     (df["epoch"] == (epoch + 1))
                 
-                results[s] = df.loc[indx,"value"].iloc[0]
+                if indx.sum() > 0:
+                    results[s] = df.loc[indx,"value"].iloc[0]
             self.writer.add_scalars( mt,results ,epoch +1)
 
         self.writer.close()
@@ -99,7 +100,7 @@ class TensorBoardSummaryWriter(object):
         """
 
         # One sample per class
-        idx = data_loader.df.groupby('class')['class'].apply(lambda s: s.sample(1))
+        idx = data_loader.train_dataset.df.groupby('class')['class'].apply(lambda s: s.sample(1))
         idx = idx.index 
 
         nb_channels = len(data_loader.existing_channels)
@@ -110,8 +111,8 @@ class TensorBoardSummaryWriter(object):
                             data_loader.reshape_size, 
                             data_loader.reshape_size  ).cpu() 
             for j in range(len(idx)):
-                temp_data = data_loader.validation_dataset.__getitem__(idx[j][1]) 
-                temp_images[j,:,:,:] = temp_data["image"].cpu()[i,:,:]
+                temp_data = data_loader.train_dataset.__getitem__(idx[j][1]) 
+                temp_images[j,:,:,:] = temp_data["image"].cpu()[i,:,:]  
             
             self.writer.add_images( "Channel"+str(i+1), temp_images, epoch )
             self.writer.close()
@@ -159,7 +160,8 @@ class TensorBoardSummaryWriter(object):
         labels = labels.cpu()
         images = images.to(device)
         images = images.float()
-
+        feature_extractor = feature_extractor.to(device)
+        
         # get the class labels for each image
         class_labels = [data_loader.classes[lab] for lab in labels]
         
@@ -193,14 +195,14 @@ class TensorBoardSummaryWriter(object):
                         probabilities,
                         global_step=epoch)
 
-    def add_hparams(self, configs, best_value, best_epoch, optimizer_state_dict):
+    def add_hparams(self, configs, best_value, best_epoch):
         """
         outputs the hyperparameters to tensorboard.
         Args:
             configs: dict
         """
         hparam_dict = dict()
-        hparam_dict["data_dir"] = configs["data"]["data_dir"]
+        hparam_dict["data_dir"] = configs["data"]["data_dir"].split("/")[-1]
         hparam_dict["test_data_dir"] = configs["data"]["test_data_dir"]
         hparam_dict["batch_size"] = configs["data"]["batch_size"]
         hparam_dict["model_name"] = configs["machine_learning"]["model_name"]
@@ -208,12 +210,19 @@ class TensorBoardSummaryWriter(object):
         hparam_dict["loss_function"] = configs["machine_learning"]["loss_function"]
         hparam_dict["criteria"] = configs["validation"]["call_back"]["criteria"]
         hparam_dict["best_epoch"] = best_epoch
-        hparam_dict["lr"] = configs["machine_learning"]["optimization_parameters"]["lr"]
-        hparam_dict["weight_decay"] =  configs["machine_learning"]["optimization_parameters"]["weight_decay"]
-                
+        for k in configs["machine_learning"]["optimization_parameters"]:
+            hparam_dict[k] = configs["machine_learning"]["optimization_parameters"][k]
+
         metric_dict = dict()  
-        metric_dict["hparam/" + hparam_dict["criteria"]] = best_value
-        print(hparam_dict)
-        print(metric_dict)
+        metric_dict["hparam/" + hparam_dict["criteria"]] = round(best_value, 4)
+        
+        for k in hparam_dict:
+            if hparam_dict[k] == None:
+                hparam_dict[k] = "Not_Applicable"
+        
+        for k in metric_dict:
+            if metric_dict[k] == None:
+                metric_dict[k] = "Not_Applicable"
+
         self.writer.add_hparams(hparam_dict, metric_dict) 
         self.writer.close()
