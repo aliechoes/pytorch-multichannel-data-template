@@ -124,7 +124,7 @@ class TensorBoardSummaryWriter(object):
                 for j in range(nb_channels): 
                     temp_images[j,0,:,:] = temp_data["image"].cpu()[j,:,:]  
                 
-                self.writer.add_images( "Class_"+ data_loader.classes[i] , temp_images, epoch )
+                self.writer.add_images( idx[i][0] , temp_images, epoch )
                 self.writer.close()
 
     

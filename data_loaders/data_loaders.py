@@ -106,6 +106,14 @@ def train_validation_test_split(df, validation_size= 0.2 , randomize = False):
     df.loc[X_validation.index,"set"] = "validation"
     return df
 
+def map_mean_std(mean, std, a , b):
+    s = 1./(b - a)
+    t = a/(a-b)
+    print(s)
+    print(t) 
+    mean_mapped = s*mean + t
+    std_mapped = s*std 
+    return mean_mapped, std_mapped
 
 class DataLoaderGenerator():
     """
@@ -122,6 +130,7 @@ class DataLoaderGenerator():
         self.augmentation = data_configs["augmentation"]
         self.scaling_factor = data_configs["scaling_factor"]
         self.num_workers = data_configs["num_workers"]
+        self.dynamic_range = data_configs["dynamic_range"]
         
     def data_frame_creator(self):
         """
@@ -183,7 +192,7 @@ class DataLoaderGenerator():
 
                             
             self.statistics["min"] = torch.zeros(numer_of_channels) + np.power(2,16) # 16-bit images
-            self.statistics["lower_bound"] = torch.zeros(numer_of_channels)
+            self.statistics["lower_bound"] = torch.zeros(numer_of_channels)+ np.power(2,16) # 16-bit images
             self.statistics["mean"] = torch.zeros(numer_of_channels)
             self.statistics["std"] = torch.zeros(numer_of_channels)
             self.statistics["upper_bound"] = torch.zeros(numer_of_channels)
@@ -193,17 +202,32 @@ class DataLoaderGenerator():
                 data = data["image"] 
                 for i in range(numer_of_channels):
                     self.statistics["min"][i] = min(data[:,i,:,:].min(), self.statistics["min"][i]   )
-                    self.statistics["lower_bound"][i] += np.quantile( data[:,i,:,:], .02) 
+                    self.statistics["lower_bound"][i] = min( self.statistics["lower_bound"][i] , 
+                                                    np.quantile( data[:,i,:,:], self.dynamic_range["lower_bound"] ) )
+
                     self.statistics["mean"][i] += data[:,i,:,:].mean()
                     self.statistics["std"][i] += data[:,i,:,:].std()
-                    self.statistics["upper_bound"][i] += np.quantile( data[:,i,:,:], .98) 
+
+                    self.statistics["upper_bound"][i] = max(  self.statistics["upper_bound"][i], 
+                                                    np.quantile( data[:,i,:,:], self.dynamic_range["upper_bound"]) ) 
                     self.statistics["max"][i] = max(data[:,i,:,:].max(), self.statistics["max"][i]    )
 
-            self.statistics["lower_bound"] = self.statistics["lower_bound"] / float(k)
             self.statistics["mean"].div_(len(trainloader))
             self.statistics["std"].div_(len(trainloader))
-            self.statistics["upper_bound"] = self.statistics["upper_bound"] / float(k)
+        
+        for k in self.statistics:
+            print(k,self.statistics[k])
 
+    def shift_mean_std(self):
+        self.statistics["mapped_mean"] = self.statistics["mean"].copy()
+        self.statistics["mapped_std"] = self.statistics["std"].copy()
+        for ch in range(0,len(self.existing_channels)  ): 
+            a = self.statistics["lower_bound"][ch]
+            b = self.statistics["upper_bound"][ch]
+            mean = self.statistics["mapped_mean"][ch]
+            std = self.statistics["mapped_std"][ch]
+            self.statistics["mapped_mean"][ch] , self.statistics["mapped_std"][ch] = map_mean_std(mean, std, a , b)
+        
         for k in self.statistics:
             print(k,self.statistics[k])
 
@@ -222,6 +246,10 @@ class DataLoaderGenerator():
         print("\nStarting to calculate the statistics...")
         self.calculate_statistics(checkpoint)
         print("Calculating the statistics is finished \n")
+        
+        print("Shifting the mean and std using %s \n" % self.dynamic_range)
+        self.shift_mean_std()
+        print("shifting the mean and std\n")
 
         self.train_dataset = Dataset_Generator( 
                                             self.df , 

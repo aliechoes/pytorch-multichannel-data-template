@@ -70,7 +70,8 @@ def main(configs):
                                                                 criterion,  
                                                                 writer, 
                                                                 model_folder,
-                                                                training_configs)
+                                                                training_configs,
+                                                                device)
     
     
     writer.add_hparams(configs, best_criteria_value, best_epoch )

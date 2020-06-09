@@ -52,7 +52,8 @@ def train(  model,
             criterion,  
             writer, 
             model_folder,
-            training_configs):
+            training_configs,
+            device):
     """
     the function which trains the model and evaluates it over the whole dataset
     Args:
@@ -78,13 +79,12 @@ def train(  model,
     best_criteria_value = 0.
     metrics_of_interest = training_configs["metrics_of_interest"]
     num_epochs = training_configs["num_epochs"]
-    device =  training_configs["device"]
 
     # creating a dataframe which will contain all the metrics per set per epoch
     metric_dataframe = pd.DataFrame(columns= ["epoch","set", "metric", "value"])
     
     #@TODO: make a function here
-    scheduler = ReduceLROnPlateau(optimizer, 'min', verbose=True)
+    #scheduler = ReduceLROnPlateau(optimizer, 'min', verbose=True)
 
     for epoch in range(num_epochs):  # loop over the dataset multiple times
         print(12*"-*-")
@@ -129,6 +129,7 @@ def train(  model,
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': loss ,
                 'channels': data_loader.existing_channels,
+                'scaling_factor': data_loader.scaling_factor,
                 'statistics': data_loader.statistics,
                 'data_map': data_loader.data_map
             }, model_path)  
@@ -173,7 +174,7 @@ def train(  model,
         indx =  (metric_dataframe["set"] == "validation") & \
                         (metric_dataframe["metric"] == criteria )
         current_criteria_value = metric_dataframe.loc[indx, "value"].iloc[-1]
-        scheduler.step(current_criteria_value) 
+        #scheduler.step(current_criteria_value) 
 
         if best_criteria_value < current_criteria_value:
             print("The validation %s has improved from %.4f to %.4f" % \
@@ -193,6 +194,7 @@ def train(  model,
                 'loss': loss ,
                 'channels': data_loader.existing_channels,
                 'statistics': data_loader.statistics,
+                'scaling_factor': data_loader.scaling_factor,
                 'criteria': criteria,
                 'current_criteria_value': current_criteria_value,
                 'data_map': data_loader.data_map
