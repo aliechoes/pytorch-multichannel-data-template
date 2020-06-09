@@ -74,9 +74,9 @@ DATETIME_NOW + _ + MODEL
 - [ ] add GRAD-CAM 
 - [ ] add steps for data_map
 - [x] add tensorboard 
-- [ ] add config tracker in tensorboard
+- [x] add config tracker in tensorboard
 - [x] add pr-cruve
-- [ ] add saving matplotlib saving using tensorboard
+- [x] add saving matplotlib saving using tensorboard
 - [x] add more metrics 
 - [x] add saving models
 - [x] add transfer learning
@@ -84,5 +84,13 @@ DATETIME_NOW + _ + MODEL
 - [x] add early stopping
 - [x] add feature extration
 - [x] add batch size for faster model evaluation
-- [ ] add scaling for data
-- [ ] add folder for test data
+- [x] add scaling for data
+- [x] add folder for test data
+- [ ] add logging
+- [ ] add learning rate scheduler
+- [x] change the structure of the input config
+- [x] add true false for every tensorboard module
+- [ ] create a package
+- [x] refactor the code with new structure
+- [ ] document the new code
+- [ ] grid search

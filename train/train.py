@@ -3,7 +3,7 @@ import torch
 import torchvision
 import torch.nn.functional as F
 import torch.nn as nn 
-from machine_learning.metrics import metric_history
+from train.metrics import metric_history
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import time
 import os
@@ -52,7 +52,7 @@ def train(  model,
             criterion,  
             writer, 
             model_folder,
-            configs):
+            training_configs):
     """
     the function which trains the model and evaluates it over the whole dataset
     Args:
@@ -72,16 +72,18 @@ def train(  model,
         device(str): either cpu or cuda
     """
 
-    saving_period = configs["validation"]["call_back"]["saving_period"]
-    patience = configs["validation"]["call_back"]["patience"]
-    criteria = configs["validation"]["call_back"]["criteria"]
-    best_criteria_value = 0
-    metrics_of_interest = configs["validation"]["metrics_of_interest"]
-    num_epochs = configs["machine_learning"]["num_epochs"]
-    device =  configs["machine_learning"]["device"]
+    saving_period = training_configs["call_back"]["saving_period"]
+    patience = training_configs["call_back"]["patience"]
+    criteria = training_configs["call_back"]["criteria"]
+    best_criteria_value = 0.
+    metrics_of_interest = training_configs["metrics_of_interest"]
+    num_epochs = training_configs["num_epochs"]
+    device =  training_configs["device"]
 
     # creating a dataframe which will contain all the metrics per set per epoch
     metric_dataframe = pd.DataFrame(columns= ["epoch","set", "metric", "value"])
+    
+    #@TODO: make a function here
     scheduler = ReduceLROnPlateau(optimizer, 'min', verbose=True)
 
     for epoch in range(num_epochs):  # loop over the dataset multiple times
@@ -174,6 +176,8 @@ def train(  model,
         scheduler.step(current_criteria_value) 
 
         if best_criteria_value < current_criteria_value:
+            print("The validation %s has improved from %.4f to %.4f" % \
+                            (criteria,best_criteria_value, current_criteria_value)  )
             writer.add_images( data_loader, epoch )
             writer.add_pr_curve( data_loader, epoch )
             writer.add_confusion_matrix( data_loader, epoch ) 
@@ -209,13 +213,11 @@ def train(  model,
     # the formula to get the feature extractor is included in th model.embedding_generator 
     # however, it has to be evaluated separately and cannot be part of the model as 
     # pytorch makes mistakes with new architecures in the model
-    try:
-        writer.add_hparams(configs, best_criteria_value, best_epoch )
-    except:
-        print("h_param has problem")
+    
+    
     model, feature_extractor = make_model_sequential(model, device)
     writer.add_graph(model, data_loader)
     writer.add_embedding( feature_extractor, data_loader, epoch, device)
     
     print('Finished Training')
-    return  model, metric_dataframe 
+    return metric_dataframe, best_criteria_value, best_epoch 

@@ -188,10 +188,10 @@ class Dataset_Generator(Dataset):
             img_name = str(self.df.loc[idx,"file"]).replace(self.channels[0]+".", self.channels[ch]+".")                    
             image_dummy = imread(img_name).astype(np.float64) / float(self.scaling_factor)
             image[:,:,ch] = image_dummy
-            
+      
         for aug in self.augmentation:
             image = data_augmentation(image,aug)
-        
+
         image = resize(image , (self.reshape_size, self.reshape_size, len(self.channels)) ) 
 
         # transposeing from HWC to CHW for pytorch
@@ -202,7 +202,6 @@ class Dataset_Generator(Dataset):
         
         for dm in self.data_map:
             image = data_mapping(image, self.statistics, dm)
-            
         label = self.df.loc[idx,"label"]
         label = np.array([label]) 
         

@@ -11,9 +11,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from data_loaders.data_loaders import DataLoaderGenerator
-from machine_learning.models import get_model
-from machine_learning.optimizers import get_optimizer
-from machine_learning.losses import get_loss
+from models import get_model
+from optimizers import get_optimizer
+from losses import get_loss
 from tensorboard_writer.tensorboard_writer import TensorBoardSummaryWriter
 from train import train
 import warnings

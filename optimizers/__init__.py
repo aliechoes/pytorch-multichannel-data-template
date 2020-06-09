@@ -3,7 +3,7 @@ import torchvision
 import torch
 
    
-def get_optimizer(  ml_configs, 
+def get_optimizer(  optimizer_configs, 
                     model, 
                     checkpoint):
     """
@@ -14,8 +14,8 @@ def get_optimizer(  ml_configs,
         checkpoint(dict): in case of transfer learning
     """
                      
-    optimization_method = ml_configs["optimization_method"]
-    parameters = ml_configs["optimization_parameters"]
+    optimization_method = optimizer_configs["optimization_method"]
+    parameters = optimizer_configs["optimization_parameters"]
 
     if optimization_method=="adam": 
         optimizer = torch.optim.Adam(model.parameters(),**parameters) 

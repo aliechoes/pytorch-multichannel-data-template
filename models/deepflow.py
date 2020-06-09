@@ -104,6 +104,7 @@ class DeepFlow(nn.Module):
             nn.Flatten(),
             nn.Linear(336,num_classes)           
         )
+    
     def forward(self,x):
         x = self.conv1(x)
         x = self.in3a(x)
@@ -121,3 +122,4 @@ class DeepFlow(nn.Module):
         x = self.in6c(x)
         x = self.classifier(x)
         return x
+
