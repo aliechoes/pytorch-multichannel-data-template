@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.autograd import Function
 from losses.FocalLoss2d import *
-
+import logging
 
 def calculate_weights(weights, data_loader, device):
     if weights == None:
@@ -21,7 +21,7 @@ def calculate_weights(weights, data_loader, device):
         loss_weights = []
         for cl in data_loader.classes:
             loss_weights.append( weights[cl]  )
-    print("weights for the loss are: ", loss_weights)
+    logging.info("weights for the loss are: %s" % loss_weights)
     return torch.FloatTensor(loss_weights).to(device)
 
 def one_hot_embedding(labels, num_classes):

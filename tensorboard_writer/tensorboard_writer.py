@@ -7,7 +7,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets, transforms
 import torch.nn.functional as F
 from sklearn.metrics import confusion_matrix
-
+import logging
 import itertools
 import numpy as np
 import matplotlib
@@ -91,11 +91,11 @@ class TensorBoardSummaryWriter(object):
                     
                     # finding the value for the metric and epoch
                     indx = ((df["set"] == s) & (df["metric"] == mt)) & \
-                        (df["epoch"] == (epoch + 1))
+                        (df["epoch"] == (epoch))
                     
                     if indx.sum() > 0:
                         results[s] = df.loc[indx,"value"].iloc[0]
-                self.writer.add_scalars( mt,results ,epoch +1)
+                self.writer.add_scalars( mt,results ,epoch)
 
             self.writer.close()
         
@@ -111,6 +111,7 @@ class TensorBoardSummaryWriter(object):
             # One sample per class
             idx = data_loader.train_dataset.df.groupby('class')['class'].apply(lambda s: s.sample(1))
             idx = idx.index
+            
             nb_classes = len(data_loader.classes)
             nb_channels = len(data_loader.existing_channels)
             
@@ -123,9 +124,10 @@ class TensorBoardSummaryWriter(object):
                 temp_data = data_loader.train_dataset.__getitem__(idx[i][1]) 
                 for j in range(nb_channels): 
                     temp_images[j,0,:,:] = temp_data["image"].cpu()[j,:,:]  
-                
+                    
                 self.writer.add_images( idx[i][0] , temp_images, epoch )
-                self.writer.close()
+            
+            self.writer.close()
 
     
     def add_confusion_matrix(self,  data_loader, epoch ):
@@ -141,7 +143,7 @@ class TensorBoardSummaryWriter(object):
             df_validation =  data_loader.df[validation_index].copy()
             cm = confusion_matrix(df_validation["label"].astype(int), df_validation["prediction"].astype(int))
 
-            self.writer.add_figure("Confusion Matrix",plot_confusion_matrix(cm, data_loader.classes), global_step=epoch ) 
+            self.writer.add_figure("Z_Confusion_Matrix",plot_confusion_matrix(cm, data_loader.classes), global_step=epoch ) 
             
 
     def add_graph(self, model, data_loader ):
@@ -158,7 +160,7 @@ class TensorBoardSummaryWriter(object):
             self.writer.add_graph(model.cpu(), images.cpu())
             self.writer.close()
     
-    def add_embedding(self, feature_extractor, data_loader, epoch, device):
+    def add_embedding_with_images(self, feature_extractor, data_loader, epoch, device):
         """
         gets the model and outpus n random images features to tensorboard projector
         Args:
@@ -178,7 +180,7 @@ class TensorBoardSummaryWriter(object):
             class_labels = [data_loader.classes[lab] for lab in labels]
             
             features = feature_extractor(images)
-            features = features.reshape(features.shape[0], features.shape[1] )
+            features = features.reshape(features.shape[0], features.shape[-1] )
             
             images_shape = (images.shape[0], 1,  images.shape[2]  , images.shape[3] )
             for j in range(images.shape[1]):
@@ -186,9 +188,48 @@ class TensorBoardSummaryWriter(object):
                             mat = features ,
                             metadata=class_labels,
                             label_img=images[:,j,:,:].reshape(images_shape),
-                            global_step = epoch + 1)
+                            global_step = epoch)
                 self.writer.close()
-    
+
+    def add_embedding_without_images(self, feature_extractor, data_loader, epoch, device):
+        """
+        gets the model and outpus n random images features to tensorboard projector
+        Args:
+            data_loader: data loader from pytorch 
+            model: pytorch model
+            epoch(int)
+            device(str): either cpu or cuda
+        """
+        if self.write_add_embedding:  
+            
+            idx = data_loader.validation_dataset.df["set"] == "validation"
+            idx = idx[idx].index   
+            class_labels = []
+            features = []
+
+            feature_extractor = feature_extractor.to(device)
+            for i in range(len(idx)):
+                temp_data = data_loader.validation_dataset.__getitem__(idx[i]) 
+                image_shape = temp_data["image"].shape
+                temp_image = temp_data["image"].reshape((1,
+                                                        image_shape[0], 
+                                                        image_shape[1], 
+                                                        image_shape[2]))
+                temp_image = temp_image.to(device)
+                temp_image = temp_image.float()
+                # get the class labels for each image
+                class_labels.append( temp_data["label"].cpu() )
+                        
+                features.append(feature_extractor(temp_image))
+                
+            features = torch.stack(features)
+            features = features.reshape(features.shape[0], features.shape[-1] )  
+            self.writer.add_embedding(tag = "Validation_Set",
+                            mat = features ,
+                            metadata=class_labels,  
+                            global_step = epoch)
+            self.writer.close()
+
     def add_pr_curve(self, data_loader, epoch):
         """
         outputs the precision recall curve per class per epoch
@@ -250,8 +291,8 @@ class TensorBoardSummaryWriter(object):
             #for k in hparam_dict:
             #    hparam_dict[k] = str(hparam_dict[k]).replace(" ", "_").lower()
 
-            print(hparam_dict)
-            print(metric_dict)
+            logging.info(hparam_dict)
+            logging.info(metric_dict)
             
             self.writer.add_hparams(hparam_dict, metric_dict) 
             self.writer.close()

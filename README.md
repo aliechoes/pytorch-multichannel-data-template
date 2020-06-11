@@ -71,8 +71,8 @@ DATETIME_NOW + _ + MODEL
 - [x] add documentation on the code
 - [x] update the dataloader to be able to get different file formats
 - [x] add options for augmentation from the config file
-- [ ] add GRAD-CAM 
-- [ ] add steps for data_map
+- [ ] add GRAD-CAM (decided to postpone it)
+- [x] add steps for data_map
 - [x] add tensorboard 
 - [x] add config tracker in tensorboard
 - [x] add pr-cruve
@@ -86,8 +86,8 @@ DATETIME_NOW + _ + MODEL
 - [x] add batch size for faster model evaluation
 - [x] add scaling for data
 - [x] add folder for test data
-- [ ] add logging
-- [ ] add learning rate scheduler
+- [x] add logging
+- [x] add learning rate scheduler
 - [x] change the structure of the input config
 - [x] add true false for every tensorboard module
 - [ ] create a package

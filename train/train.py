@@ -4,11 +4,13 @@ import torchvision
 import torch.nn.functional as F
 import torch.nn as nn 
 from train.metrics import metric_history
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from train.lr_schedulers import GetLRScheduler
 import time
 import os
 import pandas as pd
- 
+import logging
+from tqdm import tqdm
+
 def make_model_sequential(model, device):
     embedding_generator = model.embedding_generator
     image_size = model.image_size 
@@ -25,9 +27,9 @@ def elapsed_time_print(start_time, message, epoch):
     elapsed_time = time.time() - start_time
     elapsed_time = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
     to_be_printed = "epoch %d: " + message 
-    print(4*"---")
-    print(to_be_printed % (epoch, elapsed_time))
-    print(4*"---")
+    logging.info(4*"---")
+    logging.info(to_be_printed % (epoch, elapsed_time))
+    logging.info(4*"---")
     return None
 
 def early_stopping(validation_criteria, patience):
@@ -79,16 +81,16 @@ def train(  model,
     best_criteria_value = 0.
     metrics_of_interest = training_configs["metrics_of_interest"]
     num_epochs = training_configs["num_epochs"]
-
+    lr_scheduler_config = training_configs["lr_scheduler"]
     # creating a dataframe which will contain all the metrics per set per epoch
     metric_dataframe = pd.DataFrame(columns= ["epoch","set", "metric", "value"])
     
-    #@TODO: make a function here
-    #scheduler = ReduceLROnPlateau(optimizer, 'min', verbose=True)
 
-    for epoch in range(num_epochs):  # loop over the dataset multiple times
-        print(12*"-*-")
-        print("EPOCH: %d" % epoch)
+    scheduler = GetLRScheduler(optimizer,lr_scheduler_config) 
+    
+    for epoch in range(1,num_epochs+1) :  # loop over the dataset multiple times
+        logging.info("\n" + 4*"---")
+        logging.info("epoch: %d , learing rate: %.8f" % (epoch, scheduler.scheduler.get_lr()[0]))
         model.train()
         running_loss = 0.0
         start_time = time.time()
@@ -115,7 +117,7 @@ def train(  model,
 
             # print loss every 5 minibatches
             if i % 5 == 4:
-                print('[epoch: %d, minibatch %5d] loss: %.8f' % (epoch, i + 1, running_loss / 5))
+                logging.info('[epoch: %d, minibatch %5d] loss: %.8f' % (epoch, i + 1, running_loss / 5))
                 running_loss = 0.0
         elapsed_time_print(start_time, "Training took %s", epoch)
 
@@ -174,10 +176,10 @@ def train(  model,
         indx =  (metric_dataframe["set"] == "validation") & \
                         (metric_dataframe["metric"] == criteria )
         current_criteria_value = metric_dataframe.loc[indx, "value"].iloc[-1]
-        #scheduler.step(current_criteria_value) 
+        scheduler.step(current_criteria_value)
 
         if best_criteria_value < current_criteria_value:
-            print("The validation %s has improved from %.4f to %.4f" % \
+            logging.info("The validation %s has improved from %.4f to %.4f" % \
                             (criteria,best_criteria_value, current_criteria_value)  )
             writer.add_images( data_loader, epoch )
             writer.add_pr_curve( data_loader, epoch )
@@ -208,7 +210,7 @@ def train(  model,
                         (metric_dataframe["metric"] == criteria )
             validation_criteria = metric_dataframe.loc[indx, "value"]
             if early_stopping(validation_criteria, patience):
-                print("The training has stopped as the early stopping is triggered")
+                logging.info("The training has stopped as the early stopping is triggered")
                 break
     
     ## the feature extractor only can be done when the weights are calculated.
@@ -219,7 +221,9 @@ def train(  model,
     
     model, feature_extractor = make_model_sequential(model, device)
     writer.add_graph(model, data_loader)
-    writer.add_embedding( feature_extractor, data_loader, epoch, device)
-    
-    print('Finished Training')
+    model = None
+    writer.add_embedding_with_images( feature_extractor, data_loader, epoch, device)
+    writer.add_embedding_without_images( feature_extractor, data_loader, epoch, device)
+
+    logging.info('Finished Training')
     return metric_dataframe, best_criteria_value, best_epoch 

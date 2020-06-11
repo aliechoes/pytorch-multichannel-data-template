@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import logging
 
 def load_json(file_path):
     with open(file_path, 'r') as stream:    
@@ -40,7 +41,7 @@ def change_config(config, key_value, value):
 def run_differnet_settings(config_path):
     configs = load_json(config_path)
     for k in configs:
-        print("%s : %s \n" % (k,configs[k]))
+        logging.info("%s : %s \n" % (k,configs[k]))
 
     grid = dict()
     grid["data_dir"] = ["/pstore/home/shetabs1/data/CellCycle"] # , 
@@ -56,7 +57,7 @@ def run_differnet_settings(config_path):
     for a in grid["data_dir"]:
         configs = change_config(configs, "data_dir", a) 
         #b = a.replace("Donor12", "Donor3").replace("Donor13", "Donor2").replace("Donor23", "Donor1")
-        #print(b)
+        #logging.info(b)
         #configs = change_config(configs, "test_data_dir", b) 
         for c in grid["model_name"]: 
             configs = change_config(configs, "model_name", c)

@@ -16,8 +16,7 @@ from optimizers import get_optimizer
 from losses import get_loss
 from tensorboard_writer.tensorboard_writer import TensorBoardSummaryWriter
 from train import train
-import warnings
-warnings.filterwarnings("ignore")
+import logging
 
 # fix random seeds for reproducibility
 #SEED = 123
@@ -34,7 +33,7 @@ def create_name(arch, optimization_method, lr):
     run_name = str(datetime.now()) +    "_" + arch + \
                                         "_" + optimization_method + \
                                         "_" + str(lr)
-    print("Model Name: %s \n" % run_name)
+    logging.info("Model Name: %s \n" % run_name)
     return run_name
 
 def load_json(file_path):
@@ -51,3 +50,12 @@ def get_checkpoint(file_path):
     else:
         checkpoint = None
     return checkpoint
+
+def logger(level):
+    logging_level = {
+        0 : logging.WARNING,
+        1 : logging.INFO,
+        2 : logging.DEBUG
+    }
+    logging.basicConfig(level=logging_level[level])
+    logging.getLogger('matplotlib.font_manager').disabled = True

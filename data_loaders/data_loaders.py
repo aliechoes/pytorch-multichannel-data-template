@@ -19,6 +19,8 @@ from sklearn.model_selection import train_test_split
 from skimage.transform import   rescale, resize, rotate
 from imageio import imread 
 from data_loaders.data_sets import Dataset_Generator
+import logging
+from tqdm import tqdm
 
 
 def finding_classes(data_dir):
@@ -26,8 +28,8 @@ def finding_classes(data_dir):
     this function finds the folders in the root path and considers them
     as classes
     """
-    classes = os.listdir(data_dir)
-    print("Classes: %s \n" % classes)
+    classes = sorted(os.listdir(data_dir))
+    logging.info("Classes: %s \n" % classes)
     return classes
 
 def finding_channels(classes, data_dir):
@@ -109,8 +111,6 @@ def train_validation_test_split(df, validation_size= 0.2 , randomize = False):
 def map_mean_std(mean, std, a , b):
     s = 1./(b - a)
     t = a/(a-b)
-    print(s)
-    print(t) 
     mean_mapped = s*mean + t
     std_mapped = s*std 
     return mean_mapped, std_mapped
@@ -147,11 +147,11 @@ class DataLoaderGenerator():
         self.classes = finding_classes(self.data_dir)
         self.existing_channels = finding_channels(  self.classes, 
                                                     self.data_dir)
-        print("Existing Channels: {}".format(self.existing_channels))
+        logging.info("Existing Channels: {}".format(self.existing_channels))
         self.nb_per_class = number_of_files_per_class(  self.classes, 
                                                         self.data_dir, 
                                                         self.existing_channels)
-        print("detected independent images per class %s \n" % self.nb_per_class) 
+        logging.info("detected independent images per class %s \n" % self.nb_per_class) 
 
         self.df = input_dataframe_generator(self.data_dir, 
                                             self.test_data_dir ,
@@ -170,7 +170,7 @@ class DataLoaderGenerator():
         """
         self.statistics = dict()
         if checkpoint is not None:
-            print("used previously calculated statistics for transfer learning")
+            logging.info("used previously calculated statistics for transfer learning")
             self.statistics["min"] = checkpoint["statistics"]["min"]
             self.statistics["lower_bound"] = checkpoint["statistics"]["lower_bound"] 
             self.statistics["mean"] = checkpoint["statistics"]["mean"]
@@ -198,7 +198,9 @@ class DataLoaderGenerator():
             self.statistics["upper_bound"] = torch.zeros(numer_of_channels)
             self.statistics["max"] = torch.zeros(numer_of_channels)
 
-            for k, data in enumerate(trainloader, 1):
+
+            for _, data in enumerate(trainloader, 1): 
+                logging.info("\n" + 4*"---")
                 data = data["image"] 
                 for i in range(numer_of_channels):
                     self.statistics["min"][i] = min(data[:,i,:,:].min(), self.statistics["min"][i]   )
@@ -215,12 +217,12 @@ class DataLoaderGenerator():
             self.statistics["mean"].div_(len(trainloader))
             self.statistics["std"].div_(len(trainloader))
         
-        for k in self.statistics:
-            print(k,self.statistics[k])
+        logging.info("Shifting the mean and std using %s \n" % self.dynamic_range)
+        self.shift_mean_std()
 
     def shift_mean_std(self):
-        self.statistics["mapped_mean"] = self.statistics["mean"].copy()
-        self.statistics["mapped_std"] = self.statistics["std"].copy()
+        self.statistics["mapped_mean"] = self.statistics["mean"].clone()
+        self.statistics["mapped_std"] = self.statistics["std"].clone()
         for ch in range(0,len(self.existing_channels)  ): 
             a = self.statistics["lower_bound"][ch]
             b = self.statistics["upper_bound"][ch]
@@ -229,7 +231,7 @@ class DataLoaderGenerator():
             self.statistics["mapped_mean"][ch] , self.statistics["mapped_std"][ch] = map_mean_std(mean, std, a , b)
         
         for k in self.statistics:
-            print(k,self.statistics[k])
+            logging.info("%s %s" % (k , self.statistics[k]))
 
     def data_loader(self, reshape_size, checkpoint):
         """
@@ -243,13 +245,11 @@ class DataLoaderGenerator():
                                 train, validation and test
         """
         self.reshape_size = reshape_size
-        print("\nStarting to calculate the statistics...")
+        logging.info("\nStarting to calculate the statistics...")
         self.calculate_statistics(checkpoint)
-        print("Calculating the statistics is finished \n")
+        logging.info("Calculating the statistics is finished \n")
         
-        print("Shifting the mean and std using %s \n" % self.dynamic_range)
-        self.shift_mean_std()
-        print("shifting the mean and std\n")
+
 
         self.train_dataset = Dataset_Generator( 
                                             self.df , 

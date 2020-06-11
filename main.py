@@ -1,5 +1,6 @@
 from utils import *
 from train.train import train
+import logging
 
 def main(configs):
     """
@@ -9,6 +10,8 @@ def main(configs):
         configs: dictionary file with the format of the config file. a sample
                  file can be find at ./configs/sample-config.json
     """
+    
+
     device = configs["training"]["device"]
 
     # seperating the configs part
@@ -103,7 +106,11 @@ if __name__ == "__main__":
     args = vars(parser.parse_args())
     
     configs = load_json(args['config'])
+    logger(configs["training"]["verbosity"])
+
     for k in configs:
-        print("%s : %s \n" % (k,configs[k]))
+        logging.info("%s : %s \n" % (k,configs[k]))
+    
+    
     main(configs)
 

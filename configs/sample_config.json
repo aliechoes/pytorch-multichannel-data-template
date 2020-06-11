@@ -1,7 +1,7 @@
 {
 
 	"model": {
-		"network": "deepflow",
+		"network": "lenet",
 		"device": "cuda",
 		"checkpoint_path": null,
 		"args": {}
@@ -20,13 +20,13 @@
 		}
 	},
 	"training": {
-		"num_epochs": 1000,
+		"num_epochs": 100,
 		"device": "cuda",
 		"metrics_of_interest": ["accuracy", "f1_macro", "f1_weighted", "cross_entropy"],
 		"call_back": {
-			"patience": 20,
+			"patience": 30,
 			"saving_period": 100,
-			"criteria": "accuracy"
+			"criteria": "f1_macro"
 		},
 		"verbosity": 2,
 		"lr_scheduler": {
@@ -39,22 +39,22 @@
 
 	},
 	"data_loader": {
-		"data_dir": "/pstore/home/shetabs1/data/CellCycle/",
+		"data_dir": "/pstore/home/shetabs1/code/pytorch-multichannel-data-template/sample_data/mnist/",
 		"batch_size": 2048,
 		"dynamic_range": {
-				"lower_bound":0.02,
-				"upper_bound":0.98
+				"lower_bound":0.01,
+				"upper_bound":0.99
 		},
 		"data_map": ["map_zero_one","normalize"],
 		"validation_split": 0.25,
 		"test_data_dir": null,
-		"augmentation": ["random_crop", "random_rotation", "random_flip"],
+		"augmentation": ["random_rotation"],
 		"scaling_factor": 255,
 		"num_workers": 24
 
 	},
 	"tensorboard": {
-		"tensorboard_path": "/pstore/home/shetabs1/runs/CellCycle",
+		"tensorboard_path": "/pstore/home/shetabs1/runs/mnist",
 		"add_metrics": true,
 		"add_images": true,
 		"add_confusion_matrix": true,
@@ -62,7 +62,5 @@
 		"add_pr_curve": true,
 		"add_hparams": false,
 		"add_embedding": true
-
-
 	}
 }
