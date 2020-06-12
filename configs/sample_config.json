@@ -7,8 +7,7 @@
 		"args": {}
 	},
 	"loss": {
-		"loss_function": "CrossEntropyLoss",
-		"device": "cuda",
+		"loss_function": "CrossEntropyLoss", 
 		"weights": null
 	},
 	"optimizer": {
