@@ -14,6 +14,9 @@ import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
+def unmap_image(image, mean, std):
+    image_new = image*std + mean
+    return image_new
 
 def plot_confusion_matrix(cm, class_names):
     """
@@ -123,13 +126,15 @@ class TensorBoardSummaryWriter(object):
                 
                 temp_data = data_loader.train_dataset.__getitem__(idx[i][1]) 
                 for j in range(nb_channels): 
-                    temp_images[j,0,:,:] = temp_data["image"].cpu()[j,:,:]  
+                    mapped_mean = data_loader.statistics["mapped_mean"][j] 
+                    mapped_std = data_loader.statistics["mapped_std"][j] 
+                    new_image = unmap_image(temp_data["image"].cpu()[j,:,:], mapped_mean, mapped_std )
+                    temp_images[(nb_channels-1-j),0,:,:] =  new_image
                     
                 self.writer.add_images( idx[i][0] , temp_images, epoch )
+                self.writer.close()
             
-            self.writer.close()
 
-    
     def add_confusion_matrix(self,  data_loader, epoch ):
         """
         Add confusion matrix images to tensorboard 
@@ -138,12 +143,17 @@ class TensorBoardSummaryWriter(object):
             epoch(int): epoch
         """
         if self.write_add_confusion_matrix:
-            # One sample per class
-            validation_index = (data_loader.df["set"] == "validation")
-            df_validation =  data_loader.df[validation_index].copy()
-            cm = confusion_matrix(df_validation["label"].astype(int), df_validation["prediction"].astype(int))
+            sets = ["validation", "test"]
+            for s in sets:    
+                new_index = (data_loader.df["set"] == s)
+                # check whether there is something to show
+                if new_index.sum()>0:
+                    df_new =  data_loader.df[new_index].copy()
+                    cm = confusion_matrix(df_new["label"].astype(int), df_new["prediction"].astype(int))
 
-            self.writer.add_figure("Z_Confusion_Matrix",plot_confusion_matrix(cm, data_loader.classes), global_step=epoch ) 
+                    self.writer.add_figure("Z_" + s + "_Confusion_Matrix",
+                                plot_confusion_matrix(cm, data_loader.classes), global_step=epoch ) 
+                    self.writer.close()
             
 
     def add_graph(self, model, data_loader ):
@@ -243,11 +253,16 @@ class TensorBoardSummaryWriter(object):
 
             for k, cl in enumerate(data_loader.classes,0):
                 probabilities = (df_validation.loc[:, cl + "_probability"]  ).to_numpy()
-                labels = (df_validation["label"] == k).to_numpy()
+                probabilities = np.asarray(probabilities)
+                
+                labels = (df_validation["label"] == k).to_numpy().astype(int)
+                labels = np.asarray(labels)
+
                 self.writer.add_pr_curve(cl,
                             labels,
                             probabilities,
                             global_step=epoch)
+                self.writer.close()
 
     def add_hparams(self, configs, best_value, best_epoch):
         """
