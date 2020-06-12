@@ -19,8 +19,7 @@ def metric_history(df, metric_dataframe, epoch, metrics_of_interest ):
  
     existing_labels = df["label"].unique().tolist()
     for s in ["train", "validation", "test"]:
-        logging.info("\n")  
-        logging.info(4*"---") 
+        logging.info(10*"---") 
         
         df_temp = df[ df["set"]==s].reset_index(drop = True).copy()
         
@@ -74,5 +73,5 @@ def metric_history(df, metric_dataframe, epoch, metrics_of_interest ):
                 logging.info("f1_weighted for the %s set is: %f" % (s, f1_score(y_true, y_pred, average='weighted' ) ) )
                 metric_dataframe = metric_dataframe.append(results_temp, ignore_index=True)
 
-        logging.info("\n" + 4*"---")
+        logging.info(10*"---")
     return metric_dataframe

@@ -200,7 +200,7 @@ class DataLoaderGenerator():
 
 
             for _, data in enumerate(trainloader, 1): 
-                logging.info("\n" + 4*"---")
+                logging.info(10*"---")
                 data = data["image"] 
                 for i in range(numer_of_channels):
                     self.statistics["min"][i] = min(data[:,i,:,:].min(), self.statistics["min"][i]   )

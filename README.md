@@ -57,7 +57,7 @@ python main.py --config ./configs/sample_config.json
 This code is based `Python 3.7.6 (Anaconda)` using these libraries:
 
 * `torch=='1.4.0'`
-* `tensorboard=='1.15.0'`
+* `tensorboard=='2.1.0'`
 * `pandas=='1.0.0'`
 * `sklearn=='0.22.1'`
 * `skimage=='0.16.2'`

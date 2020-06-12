@@ -37,9 +37,9 @@ def elapsed_time_print(start_time, message, epoch):
     elapsed_time = time.time() - start_time
     elapsed_time = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
     to_be_printed = "epoch %d: " + message 
-    logging.info(4*"---")
+    logging.info(10*"---")
     logging.info(to_be_printed % (epoch, elapsed_time))
-    logging.info(4*"---")
+    logging.info(10*"---")
     return None
 
 def predict(configs):
