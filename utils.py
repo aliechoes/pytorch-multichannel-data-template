@@ -11,13 +11,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from data_loaders.data_loaders import DataLoaderGenerator
-from machine_learning.models import get_model
-from machine_learning.optimizers import get_optimizer
-from machine_learning.losses import get_loss
+from models import get_model
+from optimizers import get_optimizer
+from losses import get_loss
 from tensorboard_writer.tensorboard_writer import TensorBoardSummaryWriter
 from train import train
-import warnings
-warnings.filterwarnings("ignore")
+import logging
 
 # fix random seeds for reproducibility
 #SEED = 123
@@ -30,9 +29,11 @@ def make_folders(desired_path):
     os.mkdir(desired_path)
     return None
 
-def create_name(arch):
-    run_name = str(datetime.now()) + "_" + arch
-    print("Model Name: %s \n" % run_name)
+def create_name(arch, optimization_method, lr):
+    run_name = str(datetime.now()) +    "_" + arch + \
+                                        "_" + optimization_method + \
+                                        "_" + str(lr)
+    logging.info("Model Name: %s \n" % run_name)
     return run_name
 
 def load_json(file_path):
@@ -49,3 +50,12 @@ def get_checkpoint(file_path):
     else:
         checkpoint = None
     return checkpoint
+
+def logger(level):
+    logging_level = {
+        0 : logging.WARNING,
+        1 : logging.INFO,
+        2 : logging.DEBUG
+    }
+    logging.basicConfig(level=logging_level[level])
+    logging.getLogger('matplotlib.font_manager').disabled = True

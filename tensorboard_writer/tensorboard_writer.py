@@ -1,19 +1,22 @@
 import matplotlib.pyplot as plt
 import numpy as np
-
+import os
 import torch
 import torchvision
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets, transforms
 import torch.nn.functional as F
 from sklearn.metrics import confusion_matrix
-
+import logging
 import itertools
 import numpy as np
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
+def unmap_image(image, mean, std):
+    image_new = image*std + mean
+    return image_new
 
 def plot_confusion_matrix(cm, class_names):
     """
@@ -32,7 +35,7 @@ def plot_confusion_matrix(cm, class_names):
     plt.yticks(tick_marks, class_names)
 
     # Normalize the confusion matrix.
-    cm = np.around(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis], decimals=2)
+    #cm = np.around(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis], decimals=2)
 
     # Use white text if squares are dark; otherwise black.
     threshold = cm.max() / 2.
@@ -65,8 +68,16 @@ class TensorBoardSummaryWriter(object):
     """
     Class for writing different outputs to TensorBoard
     """
-    def __init__(self, output_path ):
-        self.writer = SummaryWriter(output_path )
+    def __init__(self, tensorboard_configs , run_name):
+        self.tensorboard_path =   tensorboard_configs["tensorboard_path"]
+        self.writer = SummaryWriter(os.path.join(self.tensorboard_path, run_name ) )
+        self.write_add_metrics = tensorboard_configs["add_metrics"] 
+        self.write_add_images = tensorboard_configs["add_images"]
+        self.write_add_confusion_matrix = tensorboard_configs["add_confusion_matrix"]
+        self.write_add_graph = tensorboard_configs["add_graph"]
+        self.write_add_pr_curve = tensorboard_configs["add_pr_curve"]
+        self.write_add_hparams = tensorboard_configs["add_hparams"]
+        self.write_add_embedding = tensorboard_configs["add_embedding"] 
 
     def add_metrics(self,df, metrics_of_interest,epoch):
         """
@@ -76,18 +87,20 @@ class TensorBoardSummaryWriter(object):
             metrics_of_interest(list): the metrics which should be written in tensorboard
             epoch(int): epoch
         """
-        for mt in metrics_of_interest:
-            results = dict()
-            for s in ["train","validation","test"]:
-                
-                # finding the value for the metric and epoch
-                indx = ((df["set"] == s) & (df["metric"] == mt)) & \
-                    (df["epoch"] == (epoch + 1))
-                
-                results[s] = df.loc[indx,"value"].iloc[0]
-            self.writer.add_scalars( mt,results ,epoch +1)
+        if self.write_add_metrics:
+            for mt in metrics_of_interest:
+                results = dict()
+                for s in ["train","validation","test"]:
+                    
+                    # finding the value for the metric and epoch
+                    indx = ((df["set"] == s) & (df["metric"] == mt)) & \
+                        (df["epoch"] == (epoch))
+                    
+                    if indx.sum() > 0:
+                        results[s] = df.loc[indx,"value"].iloc[0]
+                self.writer.add_scalars( mt,results ,epoch)
 
-        self.writer.close()
+            self.writer.close()
         
     def add_images(self,  data_loader, epoch ):
         """
@@ -97,26 +110,31 @@ class TensorBoardSummaryWriter(object):
             data_loader: data loader from pytorch 
             epoch(int): epoch
         """
-
-        # One sample per class
-        idx = data_loader.df.groupby('class')['class'].apply(lambda s: s.sample(1))
-        idx = idx.index 
-
-        nb_channels = len(data_loader.existing_channels)
-        
-        for i in range(nb_channels):
-            temp_images = torch.zeros( len(data_loader.classes), 
-                            1, 
-                            data_loader.reshape_size, 
-                            data_loader.reshape_size  ).cpu() 
-            for j in range(len(idx)):
-                temp_data = data_loader.validation_dataset.__getitem__(idx[j][1]) 
-                temp_images[j,:,:,:] = temp_data["image"].cpu()[i,:,:]
+        if self.write_add_images:
+            # One sample per class
+            idx = data_loader.train_dataset.df.groupby('class')['class'].apply(lambda s: s.sample(1))
+            idx = idx.index
             
-            self.writer.add_images( "Channel"+str(i+1), temp_images, epoch )
-            self.writer.close()
+            nb_classes = len(data_loader.classes)
+            nb_channels = len(data_loader.existing_channels)
+            
+            for i in range(nb_classes):
+                temp_images = torch.zeros( nb_channels,
+                                1,                                 
+                                data_loader.reshape_size, 
+                                data_loader.reshape_size  ).cpu() 
+                
+                temp_data = data_loader.train_dataset.__getitem__(idx[i][1]) 
+                for j in range(nb_channels): 
+                    mapped_mean = data_loader.statistics["mapped_mean"][j] 
+                    mapped_std = data_loader.statistics["mapped_std"][j] 
+                    new_image = unmap_image(temp_data["image"].cpu()[j,:,:], mapped_mean, mapped_std )
+                    temp_images[(nb_channels-1-j),0,:,:] =  new_image
+                    
+                self.writer.add_images( idx[i][0] , temp_images, epoch )
+                self.writer.close()
+            
 
-    
     def add_confusion_matrix(self,  data_loader, epoch ):
         """
         Add confusion matrix images to tensorboard 
@@ -124,14 +142,19 @@ class TensorBoardSummaryWriter(object):
             data_loader: data loader from pytorch 
             epoch(int): epoch
         """
+        if self.write_add_confusion_matrix:
+            sets = ["validation", "test"]
+            for s in sets:    
+                new_index = (data_loader.df["set"] == s)
+                # check whether there is something to show
+                if new_index.sum()>0:
+                    df_new =  data_loader.df[new_index].copy()
+                    cm = confusion_matrix(df_new["label"].astype(int), df_new["prediction"].astype(int))
 
-        # One sample per class
-        validation_index = (data_loader.df["set"] == "validation")
-        df_validation =  data_loader.df[validation_index].copy()
-        cm = confusion_matrix(df_validation["label"].astype(int), df_validation["prediction"].astype(int))
-
-        self.writer.add_figure("Confusion Matrix",plot_confusion_matrix(cm, data_loader.classes), global_step=epoch ) 
-        
+                    self.writer.add_figure("Z_" + s + "_Confusion_Matrix",
+                                plot_confusion_matrix(cm, data_loader.classes), global_step=epoch ) 
+                    self.writer.close()
+            
 
     def add_graph(self, model, data_loader ):
         """
@@ -140,13 +163,14 @@ class TensorBoardSummaryWriter(object):
             data_loader: data loader from pytorch 
             model: pytorch model
         """
-        images, _ = select_n_random(data_loader.train_dataset )
-        images = images.float() 
+        if self.write_add_graph:
+            images, _ = select_n_random(data_loader.train_dataset )
+            images = images.float() 
 
-        self.writer.add_graph(model.cpu(), images.cpu())
-        self.writer.close()
+            self.writer.add_graph(model.cpu(), images.cpu())
+            self.writer.close()
     
-    def add_embedding(self, feature_extractor, data_loader, epoch, device):
+    def add_embedding_with_images(self, feature_extractor, data_loader, epoch, device):
         """
         gets the model and outpus n random images features to tensorboard projector
         Args:
@@ -155,26 +179,67 @@ class TensorBoardSummaryWriter(object):
             epoch(int)
             device(str): either cpu or cuda
         """
-        images, labels = select_n_random(data_loader.train_dataset )
-        labels = labels.cpu()
-        images = images.to(device)
-        images = images.float()
+        if self.write_add_embedding:
+            images, labels = select_n_random(data_loader.train_dataset )
+            labels = labels.cpu()
+            images = images.to(device)
+            images = images.float()
+            feature_extractor = feature_extractor.to(device)
+            
+            # get the class labels for each image
+            class_labels = [data_loader.classes[lab] for lab in labels]
+            
+            features = feature_extractor(images)
+            features = features.reshape(features.shape[0], features.shape[-1] )
+            
+            images_shape = (images.shape[0], 1,  images.shape[2]  , images.shape[3] )
+            for j in range(images.shape[1]):
+                self.writer.add_embedding(tag = "Channel " + str(j+1),
+                            mat = features ,
+                            metadata=class_labels,
+                            label_img=images[:,j,:,:].reshape(images_shape),
+                            global_step = epoch)
+                self.writer.close()
 
-        # get the class labels for each image
-        class_labels = [data_loader.classes[lab] for lab in labels]
-        
-        features = feature_extractor(images)
-        features = features.reshape(features.shape[0], features.shape[1] )
-        
-        images_shape = (images.shape[0], 1,  images.shape[2]  , images.shape[3] )
-        for j in range(images.shape[1]):
-            self.writer.add_embedding(tag = "Channel " + str(j+1),
-                        mat = features ,
-                        metadata=class_labels,
-                        label_img=images[:,j,:,:].reshape(images_shape),
-                        global_step = epoch + 1)
+    def add_embedding_without_images(self, feature_extractor, data_loader, epoch, device):
+        """
+        gets the model and outpus n random images features to tensorboard projector
+        Args:
+            data_loader: data loader from pytorch 
+            model: pytorch model
+            epoch(int)
+            device(str): either cpu or cuda
+        """
+        if self.write_add_embedding:  
+            
+            idx = data_loader.validation_dataset.df["set"] == "validation"
+            idx = idx[idx].index   
+            class_labels = []
+            features = []
+
+            feature_extractor = feature_extractor.to(device)
+            for i in range(len(idx)):
+                temp_data = data_loader.validation_dataset.__getitem__(idx[i]) 
+                image_shape = temp_data["image"].shape
+                temp_image = temp_data["image"].reshape((1,
+                                                        image_shape[0], 
+                                                        image_shape[1], 
+                                                        image_shape[2]))
+                temp_image = temp_image.to(device)
+                temp_image = temp_image.float()
+                # get the class labels for each image
+                class_labels.append( temp_data["label"].cpu() )
+                        
+                features.append(feature_extractor(temp_image))
+                
+            features = torch.stack(features)
+            features = features.reshape(features.shape[0], features.shape[-1] )  
+            self.writer.add_embedding(tag = "Validation_Set",
+                            mat = features ,
+                            metadata=class_labels,  
+                            global_step = epoch)
             self.writer.close()
-    
+
     def add_pr_curve(self, data_loader, epoch):
         """
         outputs the precision recall curve per class per epoch
@@ -182,38 +247,67 @@ class TensorBoardSummaryWriter(object):
             data_loader: data loader from pytorch 
             model: pytorch model
         """
-        validation_index = (data_loader.df["set"] == "validation")
-        df_validation =  data_loader.df[validation_index].copy()
+        if self.write_add_pr_curve:
+            validation_index = (data_loader.df["set"] == "validation")
+            df_validation =  data_loader.df[validation_index].copy()
 
-        for k, cl in enumerate(data_loader.classes,0):
-            probabilities = (df_validation.loc[:, cl + "_probability"]  ).to_numpy()
-            labels = (df_validation["label"] == k).to_numpy()
-            self.writer.add_pr_curve(cl,
-                        labels,
-                        probabilities,
-                        global_step=epoch)
+            for k, cl in enumerate(data_loader.classes,0):
+                probabilities = (df_validation.loc[:, cl + "_probability"]  ).to_numpy()
+                probabilities = np.asarray(probabilities)
+                
+                labels = (df_validation["label"] == k).to_numpy().astype(int)
+                labels = np.asarray(labels)
 
-    def add_hparams(self, configs, best_value, best_epoch, optimizer_state_dict):
+                self.writer.add_pr_curve(cl,
+                            labels,
+                            probabilities,
+                            global_step=epoch)
+                self.writer.close()
+
+    def add_hparams(self, configs, best_value, best_epoch):
         """
         outputs the hyperparameters to tensorboard.
         Args:
             configs: dict
         """
-        hparam_dict = dict()
-        hparam_dict["data_dir"] = configs["data"]["data_dir"]
-        hparam_dict["test_data_dir"] = configs["data"]["test_data_dir"]
-        hparam_dict["batch_size"] = configs["data"]["batch_size"]
-        hparam_dict["model_name"] = configs["machine_learning"]["model_name"]
-        hparam_dict["optimization_method"] = configs["machine_learning"]["optimization_method"]
-        hparam_dict["loss_function"] = configs["machine_learning"]["loss_function"]
-        hparam_dict["criteria"] = configs["validation"]["call_back"]["criteria"]
-        hparam_dict["best_epoch"] = best_epoch
-        hparam_dict["lr"] = configs["machine_learning"]["optimization_parameters"]["lr"]
-        hparam_dict["weight_decay"] =  configs["machine_learning"]["optimization_parameters"]["weight_decay"]
-                
-        metric_dict = dict()  
-        metric_dict["hparam/" + hparam_dict["criteria"]] = best_value
-        print(hparam_dict)
-        print(metric_dict)
-        self.writer.add_hparams(hparam_dict, metric_dict) 
-        self.writer.close()
+        if self.write_add_hparams:
+            # seperating the configs part
+            model_configs = configs["model"]
+            loss_configs = configs["loss"]
+            optimizer_configs = configs["optimizer"]
+            training_configs = configs["training"]
+            data_loader_configs = configs["data_loader"] 
+
+            hparam_dict = dict()
+            hparam_dict["data_dir"] = data_loader_configs["data_dir"]
+
+            #hparam_dict["test_data_dir"] = data_loader_configs["test_data_dir"]
+            #hparam_dict["batch_size"] = data_loader_configs["batch_size"]
+            #hparam_dict["model_name"] = model_configs["network"]
+            #hparam_dict["optimization_method"] = optimizer_configs["optimization_method"]
+            #hparam_dict["loss_function"] = loss_configs["loss_function"]
+            hparam_dict["criteria"] = training_configs["call_back"]["criteria"]
+            #hparam_dict["best_epoch"] = best_epoch
+
+            #for k in optimizer_configs["optimization_parameters"]:
+                #hparam_dict[k] = optimizer_configs["optimization_parameters"][k]
+
+            metric_dict = dict()  
+            metric_dict["hparam/" + hparam_dict["criteria"]] = round(best_value, 4)
+            
+            #for k in hparam_dict:
+            #    if hparam_dict[k] == None:
+            #        hparam_dict[k] = "None"
+            
+            #for k in metric_dict:
+            #    if metric_dict[k] == None:
+            #        metric_dict[k] = "None"
+            
+            #for k in hparam_dict:
+            #    hparam_dict[k] = str(hparam_dict[k]).replace(" ", "_").lower()
+
+            logging.info(hparam_dict)
+            logging.info(metric_dict)
+            
+            self.writer.add_hparams(hparam_dict, metric_dict) 
+            self.writer.close()

@@ -37,9 +37,9 @@ def elapsed_time_print(start_time, message, epoch):
     elapsed_time = time.time() - start_time
     elapsed_time = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
     to_be_printed = "epoch %d: " + message 
-    print(4*"---")
-    print(to_be_printed % (epoch, elapsed_time))
-    print(4*"---")
+    logging.info(10*"---")
+    logging.info(to_be_printed % (epoch, elapsed_time))
+    logging.info(10*"---")
     return None
 
 def predict(configs):
@@ -53,24 +53,25 @@ def predict(configs):
     data_loader = DataLoaderGenerator(data_configs)
     data_loader.data_frame_creator()
     
-    print(data_loader.df)
+    logging.info(data_loader.df)
 
     # number of exsting channels and output classes
     number_of_channels = len(data_loader.existing_channels)
     number_of_classes = len(data_loader.nb_per_class.keys())
-    print(number_of_channels, number_of_classes)
+    logging.info(number_of_channels, number_of_classes)
     # initialize the model
     model = get_model(  ml_configs,
                         checkpoint,
                         number_of_channels ,
-                        number_of_classes)
+                        9)
 
     data_loader.data_loader(model.image_size, checkpoint)
     
     for j in range(100):
         data_loader.df["prediction_" + str(j)] = -1
     # the evaluation phase
-    print("starting the evaluation")
+ 
+    logging.info("starting the evaluation")
     with torch.no_grad():  
         model.eval()
         percentage = 0
@@ -79,7 +80,7 @@ def predict(configs):
             # finding the file in the dataframe
             idx = data["idx"].cpu().numpy()   
             percentage = percentage + len(idx) / data_loader.df.shape[0]
-            print(round(percentage, 2))
+            logging.info(round(percentage, 2))
             inputs, labels = data["image"], data["label"]
             inputs, labels = inputs.to(device) , labels.to(device)
                 
@@ -93,17 +94,22 @@ def predict(configs):
 
             data_loader.df.loc[idx,"prediction"] = predicted.cpu().numpy() 
 
-            print("probabilities")
+            logging.info("probabilities")
             for k, cl in enumerate(data_loader.classes,0):
                 data_loader.df.loc[idx,cl + "_probability"] = outputs_probability[:,k]
 
-            print("starting the uncertainty")
+            logging.info("starting the uncertainty")
             model.train()
             for j in range(100):
                 outputs = model(inputs)   
                 _, predicted = torch.max(outputs.data, 1)    
                 data_loader.df.loc[idx, "prediction_" + str(j)] = predicted.cpu().numpy()
-
+            if i % 10 == 0: 
+                logging.info(
+                'Eval: [{}/{} ({:.0f}%)]'.
+                format(i * len(inputs), len(data_loader.validation_dataset),
+                       100. * i / len(data_loader.validationloader) )) 
+        
         mode = data_loader.df.loc[:, [("prediction_" + str(j)) for j in range(100) ] ].mode(axis = 1)[0]
         for i in range(0,data_loader.df.shape[0]):
             data_loader.df.loc[i,"uncertainty"] = 1. - ((data_loader.df.loc[i, [("prediction_" + str(j)) for j in range(100) ] ] == mode[i]).sum())/100.
@@ -111,6 +117,14 @@ def predict(configs):
         # save the label of all images and their predictions
         data_loader.df.to_csv(os.path.join(output_folder,
                                         "granular_results.csv"), index = False)
+        for cl in data_loader.classes:
+            indx = (data_loader.df["class"] == cl)
+            files = data_loader.df.loc[indx, "file"]
+            files = files.str.replace(configs["data"]["data_dir"], "")
+            files = files.str.replace(cl, "")
+            files = files.str.replace("/Exp14_Donor1_Minus_SEA_", "")
+            files = files.str.replace("_Ch1.ome.tif", "")
+            files.to_csv("/pstore/home/shetabs1/" + cl + ".pop", index=False)
 
 
 
@@ -127,6 +141,6 @@ if __name__ == "__main__":
     
     configs = load_json(args['config'])
     for k in configs:
-        print("%s : %s \n" % (k,configs[k]))
+        logging.info("%s : %s \n" % (k,configs[k]))
     predict(configs)
 

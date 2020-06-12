@@ -94,6 +94,8 @@ def map_zero_one(x, a, b):
     y[y<0] = 0
     return y
 
+
+
 def map_minus_one_to_one(x, a, b):
     """
     map your vector to minus one and plus one
@@ -124,7 +126,8 @@ def data_mapping(image, statistics, method):
         methods(list)     :   the method which will be used for mapping the image
     """
     if method == "normalize":
-            image = transforms.Normalize(statistics["mean"] , statistics["std"] )(image) 
+            image = transforms.Normalize(   statistics["mapped_mean"] , 
+                                            statistics["mapped_std"] )(image) 
     elif method == "map_zero_one":
         for ch in range(image.shape[0]):
             a = statistics["lower_bound"][ch]
@@ -188,10 +191,10 @@ class Dataset_Generator(Dataset):
             img_name = str(self.df.loc[idx,"file"]).replace(self.channels[0]+".", self.channels[ch]+".")                    
             image_dummy = imread(img_name).astype(np.float64) / float(self.scaling_factor)
             image[:,:,ch] = image_dummy
-            
+      
         for aug in self.augmentation:
             image = data_augmentation(image,aug)
-        
+
         image = resize(image , (self.reshape_size, self.reshape_size, len(self.channels)) ) 
 
         # transposeing from HWC to CHW for pytorch
@@ -200,7 +203,7 @@ class Dataset_Generator(Dataset):
         # map numpy array to tensor
         image = torch.from_numpy(np.flip(image,axis=0).copy() ) 
         
-        for dm in self.data_map:
+        for dm in self.data_map:      
             image = data_mapping(image, self.statistics, dm)
             
         label = self.df.loc[idx,"label"]

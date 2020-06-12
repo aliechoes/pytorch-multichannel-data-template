@@ -2,13 +2,13 @@
 
 {
 	"machine_learning": {
-		"checkpoint_path": "/pstore/home/shetabs1/runs/cell_cycle/2020-05-28 23:25:58.110737_densenet121/models/best_model.pth" ,
+		"checkpoint_path": "/pstore/home/shetabs1/runs/Experiment_12_labeled_data/2020-06-04 17:19:17.223375_resnet18_adam_0.001/models/best_model.pth" ,
 		"device": "cuda",
 		"optimization_method": "adam",
-		"model_name": "densenet121" 
+		"model_name": "resnet18" 
 	}, 
 	"data": {
-		"data_dir": "/pstore/home/shetabs1/data/Exp12_labeled_images/Donor3/",
+		"data_dir": "/pstore/data/DS4/synapse_formation/Experiment_12/Donor_1",
 		"test_split": 0.3,
 		"batch_size": 64,
 		"data_map": ["normalize"],

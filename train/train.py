@@ -3,11 +3,22 @@ import torch
 import torchvision
 import torch.nn.functional as F
 import torch.nn as nn 
-from machine_learning.metrics import metric_history
+from train.metrics import metric_history
+from train.lr_schedulers import GetLRScheduler
 import time
 import os
 import pandas as pd
- 
+import logging
+from tqdm import tqdm
+
+def make_model_sequential(model, device):
+    embedding_generator = model.embedding_generator
+    image_size = model.image_size 
+    model = model.module 
+    model = model.to(device)
+    model.image_size  =  image_size 
+    model.embedding_generator = embedding_generator 
+    return model, eval(model.embedding_generator)
 
 def elapsed_time_print(start_time, message, epoch):
     """
@@ -16,9 +27,9 @@ def elapsed_time_print(start_time, message, epoch):
     elapsed_time = time.time() - start_time
     elapsed_time = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
     to_be_printed = "epoch %d: " + message 
-    print(4*"---")
-    print(to_be_printed % (epoch, elapsed_time))
-    print(4*"---")
+    logging.info(10*"---")
+    logging.info(to_be_printed % (epoch, elapsed_time))
+    logging.info(10*"---")
     return None
 
 def early_stopping(validation_criteria, patience):
@@ -43,7 +54,8 @@ def train(  model,
             criterion,  
             writer, 
             model_folder,
-            configs):
+            training_configs,
+            device):
     """
     the function which trains the model and evaluates it over the whole dataset
     Args:
@@ -63,20 +75,22 @@ def train(  model,
         device(str): either cpu or cuda
     """
 
-    saving_period = configs["validation"]["call_back"]["saving_period"]
-    patience = configs["validation"]["call_back"]["patience"]
-    criteria = configs["validation"]["call_back"]["criteria"]
-    best_criteria_value = 0
-    metrics_of_interest = configs["validation"]["metrics_of_interest"]
-    num_epochs = configs["machine_learning"]["num_epochs"]
-    device =  configs["machine_learning"]["device"]
-
+    saving_period = training_configs["call_back"]["saving_period"]
+    patience = training_configs["call_back"]["patience"]
+    criteria = training_configs["call_back"]["criteria"]
+    best_criteria_value = 0.
+    metrics_of_interest = training_configs["metrics_of_interest"]
+    num_epochs = training_configs["num_epochs"]
+    lr_scheduler_config = training_configs["lr_scheduler"]
     # creating a dataframe which will contain all the metrics per set per epoch
     metric_dataframe = pd.DataFrame(columns= ["epoch","set", "metric", "value"])
+    
 
-    for epoch in range(num_epochs):  # loop over the dataset multiple times
-        print(12*"-*-")
-        print("EPOCH: %d" % epoch)
+    scheduler = GetLRScheduler(optimizer,lr_scheduler_config) 
+    
+    for epoch in range(1,num_epochs+1) :  # loop over the dataset multiple times
+        logging.info(10*"---")
+        logging.info("epoch: %d , learing rate: %.8f" % (epoch, scheduler.scheduler.get_lr()[0]))
         model.train()
         running_loss = 0.0
         start_time = time.time()
@@ -84,7 +98,7 @@ def train(  model,
             # get the inputs; data is a list of [inputs, labels]
             
             inputs, labels = data["image"], data["label"]
-            inputs,labels = inputs.to(device), labels.to(device)
+            inputs, labels = inputs.to(device), labels.to(device)
             
             inputs = inputs.float()
             labels = labels.reshape(labels.shape[0])
@@ -103,7 +117,7 @@ def train(  model,
 
             # print loss every 5 minibatches
             if i % 5 == 4:
-                print('[epoch: %d, minibatch %5d] loss: %.3f' % (epoch, i + 1, running_loss / 5))
+                logging.info('[epoch: %d, minibatch %5d] loss: %.8f' % (epoch, i + 1, running_loss / 5))
                 running_loss = 0.0
         elapsed_time_print(start_time, "Training took %s", epoch)
 
@@ -117,6 +131,7 @@ def train(  model,
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': loss ,
                 'channels': data_loader.existing_channels,
+                'scaling_factor': data_loader.scaling_factor,
                 'statistics': data_loader.statistics,
                 'data_map': data_loader.data_map
             }, model_path)  
@@ -161,9 +176,12 @@ def train(  model,
         indx =  (metric_dataframe["set"] == "validation") & \
                         (metric_dataframe["metric"] == criteria )
         current_criteria_value = metric_dataframe.loc[indx, "value"].iloc[-1]
-        
+        scheduler.step(current_criteria_value)
+
         if best_criteria_value < current_criteria_value:
-            #writer.add_images( data_loader, epoch )
+            logging.info("The validation %s has improved from %.4f to %.4f" % \
+                            (criteria,best_criteria_value, current_criteria_value)  )
+            writer.add_images( data_loader, epoch )
             writer.add_pr_curve( data_loader, epoch )
             writer.add_confusion_matrix( data_loader, epoch ) 
 
@@ -178,6 +196,7 @@ def train(  model,
                 'loss': loss ,
                 'channels': data_loader.existing_channels,
                 'statistics': data_loader.statistics,
+                'scaling_factor': data_loader.scaling_factor,
                 'criteria': criteria,
                 'current_criteria_value': current_criteria_value,
                 'data_map': data_loader.data_map
@@ -191,21 +210,20 @@ def train(  model,
                         (metric_dataframe["metric"] == criteria )
             validation_criteria = metric_dataframe.loc[indx, "value"]
             if early_stopping(validation_criteria, patience):
-                print("The training has stopped as the early stopping is triggered")
+                logging.info("The training has stopped as the early stopping is triggered")
                 break
     
     ## the feature extractor only can be done when the weights are calculated.
     # the formula to get the feature extractor is included in th model.embedding_generator 
     # however, it has to be evaluated separately and cannot be part of the model as 
     # pytorch makes mistakes with new architecures in the model
-    for i in range(10):
-        try:
-            writer.add_hparams(configs, best_criteria_value, best_epoch, optimizer.state_dict() )
-            break
-        except:
-            print("there is a problem with hparam")
-    #feature_extractor = eval(model.embedding_generator)
-    #writer.add_embedding( feature_extractor, data_loader, epoch, device)
-    #writer.add_graph(model, data_loader)
-    print('Finished Training')
-    return  model, metric_dataframe 
+    
+    
+    model, feature_extractor = make_model_sequential(model, device)
+    writer.add_graph(model, data_loader)
+    model = None
+    writer.add_embedding_with_images( feature_extractor, data_loader, epoch, device)
+    writer.add_embedding_without_images( feature_extractor, data_loader, epoch, device)
+
+    logging.info('Finished Training')
+    return metric_dataframe, best_criteria_value, best_epoch 

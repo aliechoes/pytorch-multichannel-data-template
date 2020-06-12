@@ -6,10 +6,16 @@ In this repository, you can find PyTorch based image classification code which c
 
 * [configs](configs): includes the config files
 * [data_loaders](data_loaders): includes the dataset and dataloders
-* [sample_data](sample_data): example of MNIST for running the code
-* [machine_learning](machine_learning): includes the models, metrics, losses as well as the optimizers.
+* [sample_data](sample_data): example of *MNIST* as well as *Reconstructing cell cycle progression* for running the code
+* [sample_output](sample_output): example of output files for a LeNet architecture
+* [eval](eval): code for predicting over a new dataset
+* [losses](losses): code for loss functions
+* [models](models): code for different models, characteristics of the models and their feature extration
+* [optimizers](optimizers): code for optimizeritation functions
+* [losses](losses): code for loss functions
 * [tensorboard_writer](tensorboard_writer): includes the methods for tensorboard as well as saving results
-
+* [train](train): includes the methods for training the model, calculating the metircs as well as the learning rate scheduler
+  
 ## Input parameters
 
 For using this code, you need to use the config file following information:
@@ -18,7 +24,7 @@ For using this code, you need to use the config file following information:
 * `test_data_dir` : directory of the test set images in their corresponding folders (each folder is a class) (defualt: `None`, format: str) 
 * `batch_size`:  Batch size
 * `validation_split`: percentage of train-validation split
-* `data_map`: list of the map which can be used for mapping data from one range to another. In case `[]` is passed, no transformation will be done on the data. At the moment, possible options are: `normalize`, `map_zero_one` and `map_minus_one_to_one`
+* `data_map`: list of the maps which can be used for mapping data from one range to another. In case `[]` is passed, no transformation will be done on the data. At the moment, possible options are: `normalize`, `map_zero_one` and `map_minus_one_to_one`
 * `augmentation`: list which can be used for data augemtnation, at the moment the options are `["random_crop", "random_rotation", "random_flip"]`. In case there is no need for augmentation, you can pass `[]`
 * `test_split`: percentage of test vs train-validation split (It will be discarded if the `test_data_dir` is `None`)
 * `tensorboard_path`: path to save tensorboard as well as other outputs
@@ -51,7 +57,7 @@ python main.py --config ./configs/sample_config.json
 This code is based `Python 3.7.6 (Anaconda)` using these libraries:
 
 * `torch=='1.4.0'`
-* `tensorboard=='1.15.0'`
+* `tensorboard=='2.1.0'`
 * `pandas=='1.0.0'`
 * `sklearn=='0.22.1'`
 * `skimage=='0.16.2'`
@@ -62,7 +68,7 @@ This code is based `Python 3.7.6 (Anaconda)` using these libraries:
 Each run is named using multiple conditions to be able to distinguish their results. The naming is based on:
 
 ```
-DATETIME_NOW + _ + MODEL
+DATETIME_NOW + _ + MODEL + OPTIMIZATION_METHOD + _ + LR
 ```
 
 ## TODO
@@ -71,12 +77,12 @@ DATETIME_NOW + _ + MODEL
 - [x] add documentation on the code
 - [x] update the dataloader to be able to get different file formats
 - [x] add options for augmentation from the config file
-- [ ] add GRAD-CAM 
-- [ ] add steps for data_map
+- [ ] add GRAD-CAM (decided to postpone it)
+- [x] add steps for data_map
 - [x] add tensorboard 
-- [ ] add config tracker in tensorboard
+- [x] add config tracker in tensorboard
 - [x] add pr-cruve
-- [ ] add saving matplotlib saving using tensorboard
+- [x] add saving matplotlib saving using tensorboard
 - [x] add more metrics 
 - [x] add saving models
 - [x] add transfer learning
@@ -84,5 +90,13 @@ DATETIME_NOW + _ + MODEL
 - [x] add early stopping
 - [x] add feature extration
 - [x] add batch size for faster model evaluation
-- [ ] add scaling for data
-- [ ] add folder for test data
+- [x] add scaling for data
+- [x] add folder for test data
+- [x] add logging
+- [x] add learning rate scheduler
+- [x] change the structure of the input config
+- [x] add true false for every tensorboard module
+- [ ] create a package
+- [x] refactor the code with new structure
+- [ ] document the new code
+- [ ] grid search

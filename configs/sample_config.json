@@ -1,1 +1,65 @@
-{"machine_learning": {"checkpoint_path": null, "optimization_parameters": {"weight_decay": 0, "lr": 0.001}, "num_epochs": 200, "device": "cuda", "optimization_method": "adam", "model_name": "densenet121", "loss_function": "CrossEntropyLoss"}, "validation": {"call_back": {"patience": 10, "saving_period": 100, "criteria": "accuracy"}, "metrics_of_interest": ["accuracy", "f1_macro", "f1_weighted", "cross_entropy"], "tensorboard_path": "/pstore/home/shetabs1/runs/cell_cycle"}, "data": {"data_dir": "/pstore/home/shetabs1/data/Exp12_labeled_images/Donor12/", "test_split": 0.3, "batch_size": 64, "data_map": ["normalize"], "validation_split": 0.2, "test_data_dir": "/pstore/home/shetabs1/data/Exp12_labeled_images/Donor3/", "augmentation": ["random_crop", "random_rotation", "random_flip"], "scaling_factor": 4095}}
+{
+
+	"model": {
+		"network": "resnet18",
+		"device": "cuda",
+		"checkpoint_path": null,
+		"args": {}
+	},
+	"loss": {
+		"loss_function": "CrossEntropyLoss", 
+		"weights": null
+	},
+	"optimizer": {
+		"optimization_method": "adam",
+		"optimization_parameters": {
+			"lr": 1e-3,
+			"weight_decay": 0,
+			"amsgrad": true
+		}
+	},
+	"training": {
+		"num_epochs": 100,
+		"device": "cuda",
+		"metrics_of_interest": ["accuracy", "f1_macro", "f1_weighted", "cross_entropy"],
+		"call_back": {
+			"patience": 90,
+			"saving_period": 100,
+			"criteria": "f1_macro"
+		},
+		"verbosity": 2,
+		"lr_scheduler": {
+			"type": "StepLR",
+			"args": {
+				"step_size": 20,
+				"gamma": 0.1
+			}
+		}
+
+	},
+	"data_loader": {
+		"data_dir": "/pstore/data/DS4/synapse_formation/Experiment_12_labeled_data_processed_merged/",
+		"batch_size": 1024,
+		"dynamic_range": {
+				"lower_bound":0.01,
+				"upper_bound":0.9999
+		},
+		"data_map": ["map_zero_one","normalize"],
+		"validation_split": 0.25,
+		"test_data_dir": "/pstore/data/DS4/synapse_formation/Experiment_14_labeled_data_processed_merged",
+		"augmentation": ["random_crop", "random_flip", "random_rotation"],
+		"scaling_factor": 4095,
+		"num_workers": 24
+
+	},
+	"tensorboard": {
+		"tensorboard_path": "/pstore/home/shetabs1/runs/synapse",
+		"add_metrics": true,
+		"add_images": true,
+		"add_confusion_matrix": true,
+		"add_graph": false,
+		"add_pr_curve": false,
+		"add_hparams": false,
+		"add_embedding": false
+	}
+}
