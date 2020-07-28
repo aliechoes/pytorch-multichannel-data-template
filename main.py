@@ -2,6 +2,7 @@ from utils import *
 from train.train import train
 import logging
 
+
 def main(configs):
     """
     This is the main function which includes the main logic of the script.
@@ -11,7 +12,9 @@ def main(configs):
                  file can be find at ./configs/sample-config.json
     """
     
-
+    logging.info("Starting the main pipeline")
+    system_info()
+    
     device = configs["training"]["device"]
 
     # seperating the configs part
@@ -47,7 +50,7 @@ def main(configs):
 
     # number of exsting channels and output classes
     number_of_channels = len(data_loader.existing_channels)
-    number_of_classes = len(data_loader.nb_per_class.keys())
+    number_of_classes = len(data_loader.classes)
 
     # initialize the model
     model = get_model(  model_configs,

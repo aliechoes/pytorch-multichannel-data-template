@@ -12,11 +12,9 @@ def calculate_weights(weights, data_loader, device):
         loss_weights = None
         return loss_weights
     elif weights == "frequency":
-        train_index = (data_loader.validation_dataset.df["set"] == "train")
-        classes = (data_loader.validation_dataset.df.loc[train_index,"class"])
         loss_weights = []
         for cl in data_loader.classes:
-            loss_weights.append( len(classes)/float((classes == cl).sum()) )
+            loss_weights.append( len(data_loader.train_dataset)/float((data_loader.train_dataset.df["class"] == cl).sum()) )
     else:
         loss_weights = []
         for cl in data_loader.classes:

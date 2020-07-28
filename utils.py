@@ -3,6 +3,8 @@ import torchvision
 import argparse
 from datetime import datetime
 import os
+import multiprocessing
+import psutil
 import json
 import itertools
 import matplotlib
@@ -59,3 +61,8 @@ def logger(level):
     }
     logging.basicConfig(level=logging_level[level])
     logging.getLogger('matplotlib.font_manager').disabled = True
+
+def system_info():
+    logging.info("CPU count: %d" % multiprocessing.cpu_count())
+    logging.info("available RAM: %s GB" % round(psutil.virtual_memory().available/1000000000., 2) )
+    logging.info("available number of GPUs: %d" % torch.cuda.device_count() ) 

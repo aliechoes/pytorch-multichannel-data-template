@@ -1,9 +1,9 @@
 #!/bin/sh
  
 PORT=8888
-GPU=1
+GPU=4
 TIME_LIMIT=3-00:00:00
-NCORES=6
+NCORES=24
 
 if [ "$#" -gt 0 ]; then
 	PORT=$1
@@ -16,7 +16,7 @@ if [ "$#" -gt 2 ];then
 fi
 
 sbatch --qos normal --time $TIME_LIMIT \
-	-o ~/logs/slurm.%j.%N.out -e ~/logs/slurm.%j.%N.err  \
+	-o ~/logs/slurm.%j.%N.err -e ~/logs/slurm.%j.%N.out  \
 	--ntasks $NCORES --partition \
 	gpu --gres=gpu:$GPU \
 	/pstore/home/shetabs1/code/pytorch-multichannel-data-template/eval.sh $PORT $GPU

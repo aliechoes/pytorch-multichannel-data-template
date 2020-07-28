@@ -1,21 +1,26 @@
 
 
 {
-	"machine_learning": {
-		"checkpoint_path": "/pstore/home/shetabs1/runs/Experiment_12_labeled_data/2020-06-04 17:19:17.223375_resnet18_adam_0.001/models/best_model.pth" ,
+	"model": {
+		"network": "resnet18",
+		"checkpoint_path": "/pstore/home/shetabs1/runs/synapse_classification/2020-07-19 00:21:27.137026_resnet18_adam_0.001/models/best_model.pth" ,
 		"device": "cuda",
-		"optimization_method": "adam",
 		"model_name": "resnet18" 
 	}, 
-	"data": {
-		"data_dir": "/pstore/data/DS4/synapse_formation/Experiment_12/Donor_1",
-		"test_split": 0.3,
-		"batch_size": 64,
-		"data_map": ["normalize"],
-		"validation_split": 0.2,
-		"test_data_dir": null,
-		"augmentation": [],
-        "scaling_factor": 4095,
-        "output_folder": "/pstore/home/shetabs1/"
+	"data_loader": {
+		"data_dir": [	"/pstore/data/DS4/synapse_formation/Experiment_12/Donor_1/"],
+		"ouput_folder" : "/pstore/home/shetabs1/" ,
+		"batch_size": 128,
+		"dynamic_range": {
+				"lower_bound":0.05,
+				"upper_bound":0.99999
+		},
+		"data_map": ["map_zero_one","normalize"],
+		"validation_split": 0.25,
+		"test_data_dir": [],
+		"augmentation": ["random_crop","random_flip", "random_rotation"],
+		"scaling_factor": 4095,
+		"num_workers": 24
+
 	}
 }
