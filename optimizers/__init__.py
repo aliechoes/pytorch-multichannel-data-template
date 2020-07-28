@@ -25,8 +25,12 @@ def get_optimizer(  optimizer_configs,
 
     if optimization_method=="sgd": 
         optimizer = torch.optim.SGD(model.parameters(),**parameters)  
+    
+    if optimization_method=="adamw": 
+        optimizer = torch.optim.AdamW(model.parameters(),**parameters)  
+    
     # transfer learning
-    if checkpoint is not None:
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    #if checkpoint is not None:
+    #    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     
     return optimizer

@@ -77,7 +77,8 @@ class TensorBoardSummaryWriter(object):
         self.write_add_graph = tensorboard_configs["add_graph"]
         self.write_add_pr_curve = tensorboard_configs["add_pr_curve"]
         self.write_add_hparams = tensorboard_configs["add_hparams"]
-        self.write_add_embedding = tensorboard_configs["add_embedding"] 
+        self.write_add_embedding_without_images = tensorboard_configs["add_embedding_without_images"] 
+        self.write_add_embedding_with_images = tensorboard_configs["add_embedding_with_images"] 
 
     def add_metrics(self,df, metrics_of_interest,epoch):
         """
@@ -179,7 +180,7 @@ class TensorBoardSummaryWriter(object):
             epoch(int)
             device(str): either cpu or cuda
         """
-        if self.write_add_embedding:
+        if self.write_add_embedding_with_images:
             images, labels = select_n_random(data_loader.train_dataset )
             labels = labels.cpu()
             images = images.to(device)
@@ -210,7 +211,7 @@ class TensorBoardSummaryWriter(object):
             epoch(int)
             device(str): either cpu or cuda
         """
-        if self.write_add_embedding:  
+        if self.write_add_embedding_without_images:  
             
             idx = data_loader.validation_dataset.df["set"] == "validation"
             idx = idx[idx].index   

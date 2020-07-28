@@ -7,10 +7,14 @@ import logging
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 
 class Null_Scheduler():
-    def __init__(self):
+    def __init__(self, optimizer):
         logging.info("No Scheduler is used")
+        self.lr = optimizer.state_dict()["param_groups"][0]["lr"]
+    def state_dict(self):
+        return {"lr": self.lr}    
     def step(self):
         pass
+
 
 class GetLRScheduler():
     def __init__(self,optimizer,lr_scheduler_config):
@@ -24,7 +28,7 @@ class GetLRScheduler():
         elif self.scheduler_type == "ReduceLROnPlateau":
             self.scheduler = ReduceLROnPlateau(optimizer, **self.parameters) 
         else:
-           self. scheduler = Null_Scheduler() 
+           self. scheduler = Null_Scheduler(optimizer) 
         
     def step(self,value):
         if self.scheduler_type == "StepLR":

@@ -1,6 +1,6 @@
 import torch
 import torchvision
-from torchvision.models import alexnet, resnet18, densenet121, squeezenet1_0
+import torchvision.models
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
@@ -9,18 +9,29 @@ from models.deepflow import DeepFlow
 from models.weight_initialization import weight_init
 import logging
 
+def model_info(model):
+    logging.info(model)
+    number_of_trainable_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)/1000000.
+    number_of_nontrainable_parameters = sum(p.numel() for p in model.parameters() if not p.requires_grad)
+    logging.info("Number of trainable parameters: %.2f M" % number_of_trainable_parameters)
+    logging.info("Number of nontrainable parameters: %d" % number_of_nontrainable_parameters)
+    return None
+
 def load_checkpoint(model, device, checkpoint):
-    if torch.cuda.device_count() > 1:
-        logging.info("Data Parallelism is on! %d GPUs are detected" % \
-                                            torch.cuda.device_count())
+    logging.info("Data Parallelism is on! %d GPUs are detected" % \
+                                        torch.cuda.device_count())
     model = nn.DataParallel(model)
     model = model.to(device)
-        # transfer learning
+    # transfer learning
     if checkpoint is not None:
-        model = model.load_state_dict(checkpoint['model_state_dict'])
-        logging.info("preivously trained model is used")
-
+        for m in checkpoint["model_state_dict"]:
+            try:
+                model.state_dict()[m].data.copy_(checkpoint["model_state_dict"][m])
+            except:
+                logging.info("for the layer %s it could not match state_dict" % m )
     return model
+
+
 
 def get_model(ml_config,device, checkpoint ,num_channels ,num_classes ):
     """
@@ -37,7 +48,7 @@ def get_model(ml_config,device, checkpoint ,num_channels ,num_classes ):
     
     ## TODO: add grad-cam
     if model_name == "alexnet":
-        model = alexnet(pretrained=True)
+        model = torchvision.models.alexnet(pretrained=True)
         ## loading the imagenet weights in case it is possible
         if num_channels != 3:
             model.features[0] = nn.Conv2d(num_channels, 64, 
@@ -55,7 +66,49 @@ def get_model(ml_config,device, checkpoint ,num_channels ,num_classes ):
 
     ## TODO: add grad-cam
     if model_name == "resnet18":
-        model = resnet18(pretrained=True)
+        model = torchvision.models.resnet18(pretrained=True)
+        ## loading the imagenet weights in case it is possible
+        if num_channels != 3:
+            model.conv1 = nn.Conv2d(num_channels, 64, kernel_size=(7, 7), 
+                            stride=(2, 2), padding=(3, 3), bias=False)
+        num_ftrs = model.fc.in_features
+        model.fc = nn.Linear(num_ftrs, num_classes)
+        model = load_checkpoint(model, device, checkpoint)
+        model.image_size = 224
+        model.intuition_layer = "features"
+        model.embedding_generator = "nn.Sequential(*list(model.children())[:-1], \
+                                                    nn.Flatten())"
+
+    if model_name == "wide_resnet50_2":
+        model = torchvision.models.wide_resnet50_2(pretrained=True)
+        ## loading the imagenet weights in case it is possible
+        if num_channels != 3:
+            model.conv1 = nn.Conv2d(num_channels, 64, kernel_size=(7, 7), 
+                            stride=(2, 2), padding=(3, 3), bias=False)
+        num_ftrs = model.fc.in_features
+        model.fc = nn.Linear(num_ftrs, num_classes)
+        model = load_checkpoint(model, device, checkpoint)
+        model.image_size = 224
+        model.intuition_layer = "features"
+        model.embedding_generator = "nn.Sequential(*list(model.children())[:-1], \
+                                                    nn.Flatten())"
+
+    if model_name == "resnet34":
+        model = torchvision.models.resnet34(pretrained=True)
+        ## loading the imagenet weights in case it is possible
+        if num_channels != 3:
+            model.conv1 = nn.Conv2d(num_channels, 64, kernel_size=(7, 7), 
+                            stride=(2, 2), padding=(3, 3), bias=False)
+        num_ftrs = model.fc.in_features
+        model.fc = nn.Linear(num_ftrs, num_classes)
+        model = load_checkpoint(model, device, checkpoint)
+        model.image_size = 224
+        model.intuition_layer = "features"
+        model.embedding_generator = "nn.Sequential(*list(model.children())[:-1], \
+                                                    nn.Flatten())"
+
+    if model_name == "resnext50_32x4d":
+        model = torchvision.models.resnext50_32x4d(pretrained=True)
         ## loading the imagenet weights in case it is possible
         if num_channels != 3:
             model.conv1 = nn.Conv2d(num_channels, 64, kernel_size=(7, 7), 
@@ -79,7 +132,7 @@ def get_model(ml_config,device, checkpoint ,num_channels ,num_classes ):
                                                     nn.Flatten())"
     ## TODO: add grad-cam
     if model_name == "densenet121":
-        model = densenet121(pretrained=True, drop_rate = 0.5)
+        model = torchvision.models.densenet121(pretrained=True, drop_rate = 0.5)
         ## loading the imagenet weights in case it is possible
         if num_channels != 3:
             model.features.conv0 = nn.Conv2d(num_channels, 64, kernel_size=(7, 7), 
@@ -93,14 +146,14 @@ def get_model(ml_config,device, checkpoint ,num_channels ,num_classes ):
                                                     nn.Flatten())"
     
     if model_name == "squeezenet1_0":
-        model = squeezenet1_0(pretrained=True)
+        model = torchvision.models.squeezenet1_0(pretrained=True)
         ## loading the imagenet weights in case it is possible
         if num_channels != 3:
-            model.features.conv0 = nn.Conv2d(num_channels, 96, kernel_size=7, stride=2)
+            model.features[0] = nn.Conv2d(num_channels, 96, kernel_size=7, stride=2)
         model.classifier[1] = nn.Conv2d(512, num_classes, kernel_size=(1,1), stride=(1,1))
         model = load_checkpoint(model, device, checkpoint)
         model.num_classes = num_classes
-        model.image_size = 224
+        model.image_size = 180
         model.intuition_layer = "features"
         model.embedding_generator = "nn.Sequential(model.features), \
                                                     nn.Flatten())"
@@ -129,6 +182,23 @@ def get_model(ml_config,device, checkpoint ,num_channels ,num_classes ):
                                                     model.classifier[:-1], \
                                                     nn.Flatten())"
 
-
-    logging.info(model)
+    if model_name == "vgg16":
+        model = torchvision.models.vgg16(pretrained=True)
+        ## loading the imagenet weights in case it is possible
+        if num_channels != 3:
+            model.features[0] = nn.Conv2d(num_channels, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        
+        num_ftrs = model.classifier[6].in_features
+        model.classifier[6] = nn.Linear(num_ftrs, num_classes)
+        model = load_checkpoint(model, device, checkpoint)
+        model.image_size = 224
+        model.intuition_layer = "features"
+        model.embedding_generator = "nn.Sequential( model.features, \
+                                                    model.avgpool, \
+                                                    nn.Flatten(), \
+                                                    model.classifier[:-1], \
+                                                    nn.Flatten())"
+ 
+    
+    model_info(model)
     return model 

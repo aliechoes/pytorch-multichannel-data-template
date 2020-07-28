@@ -20,7 +20,6 @@ from skimage.transform import   rescale, resize, rotate
 from imageio import imread 
 from data_loaders.data_sets import Dataset_Generator
 import logging
-from tqdm import tqdm
 
 
 def finding_classes(data_dir):
@@ -49,18 +48,17 @@ def finding_channels(classes, data_dir):
     return existing_channels
         
         
-def number_of_files_per_class(classes, data_dir, existing_channels ):
+def number_of_files_per_class(df ):
     """
     this function finds the number of files in each folder. It is important to
     consider that we consider all the channels togethr as on single image
     output: dictionary with keys as classes and values as number of separate images
     """
-    results = dict()
-    for cl in classes:
-        cl_path = os.path.join(data_dir, cl, "*") 
-        cl_files = glob.glob(cl_path) 
-        results[cl] = int(float(len(cl_files))/float(len(existing_channels)))
-    return results
+
+    logging.info("detected independent images per classes") 
+    logging.info(df.groupby(["class", "set"])["class"].agg("count")) 
+    
+    return None
     
     
     
@@ -73,26 +71,28 @@ def input_dataframe_generator(data_dir, test_data_dir ,classes, representing_cha
     """
     
     df = pd.DataFrame(columns= ["file"  ,"label", "class", "set","uncertainty" ,"prediction"] )
-    if test_data_dir != None:
+    if test_data_dir != []:
         data_directory = {"train" : data_dir, "test" : test_data_dir}
     else:
         data_directory = {"train" : data_dir}
     
     for dd in data_directory:
-        label = 0
-        for cl in classes:
-            df_dummy = pd.DataFrame(columns= ["file" ,"label", "class", "set","prediction"]  )
-            df_dummy["file"] = glob.glob(os.path.join(data_directory[dd] , cl, "*_" + representing_channel + "*") ) 
-            df_dummy["label"] = label
-            df_dummy["class"] = cl
-            df_dummy["uncertainty"] = -1.
-            df_dummy["prediction"] = -1.
-            df_dummy["set"] = dd
-            df = df.append(df_dummy, ignore_index=True)
-            label = label + 1
-    
+        train_data_path = data_directory[dd]
+        for tdp in train_data_path:
+            label = 0
+            for cl in classes:
+                df_dummy = pd.DataFrame(columns= ["file" ,"label", "class", "set","prediction"]  )
+                df_dummy["file"] = glob.glob(os.path.join(tdp , cl, "*_" + representing_channel + "*") ) 
+                df_dummy["label"] = label
+                df_dummy["class"] = cl
+                df_dummy["uncertainty"] = -1.
+                df_dummy["prediction"] = -1
+                df_dummy["set"] = dd
+                df = df.append(df_dummy, ignore_index=True)
+                label = label + 1
     for cl in classes:
             df[cl+"_probability"] = -1.
+    df_dummy["prediction"] = df_dummy["prediction"].astype(int)
     return df
 
 def train_validation_test_split(df, validation_size= 0.2 , randomize = False):
@@ -144,14 +144,10 @@ class DataLoaderGenerator():
         .               .       .           .           .
         .               .       .           .           .
         """
-        self.classes = finding_classes(self.data_dir)
+        self.classes = finding_classes(self.data_dir[0] )
         self.existing_channels = finding_channels(  self.classes, 
-                                                    self.data_dir)
+                                                    self.data_dir[0])
         logging.info("Existing Channels: {}".format(self.existing_channels))
-        self.nb_per_class = number_of_files_per_class(  self.classes, 
-                                                        self.data_dir, 
-                                                        self.existing_channels)
-        logging.info("detected independent images per class %s \n" % self.nb_per_class) 
 
         self.df = input_dataframe_generator(self.data_dir, 
                                             self.test_data_dir ,
@@ -161,6 +157,8 @@ class DataLoaderGenerator():
         self.df = train_validation_test_split(  self.df, 
                                                 self.validation_split)
 
+        number_of_files_per_class(  self.df )
+        
 
     def calculate_statistics(self, checkpoint):
         """
@@ -180,7 +178,7 @@ class DataLoaderGenerator():
         else:
             train_dataset = Dataset_Generator(  self.df , 
                                                 self.existing_channels , 
-                                                "train" , 
+                                                ["train"] , 
                                                 self.scaling_factor, 
                                                 self.reshape_size )
             
@@ -199,8 +197,13 @@ class DataLoaderGenerator():
             self.statistics["max"] = torch.zeros(numer_of_channels)
 
 
-            for _, data in enumerate(trainloader, 1): 
-                logging.info(10*"---")
+            for j, data in enumerate(trainloader, 1): 
+                
+                if j % 100 == 1:
+                    logging.info(10*"---")
+                    logging.info("precentage of data %d is processed" % \
+                                int( 100.*j / float(train_dataset.df.shape[0])  ) )
+
                 data = data["image"] 
                 for i in range(numer_of_channels):
                     self.statistics["min"][i] = min(data[:,i,:,:].min(), self.statistics["min"][i]   )
@@ -254,7 +257,7 @@ class DataLoaderGenerator():
         self.train_dataset = Dataset_Generator( 
                                             self.df , 
                                             self.existing_channels ,  
-                                            "train" , 
+                                            ["train"] , 
                                             self.scaling_factor,
                                             self.reshape_size , 
                                             self.data_map, 
@@ -269,7 +272,7 @@ class DataLoaderGenerator():
         self.validation_dataset = Dataset_Generator( 
                                             self.df , 
                                             self.existing_channels ,  
-                                            None , 
+                                            ["validation", "test"] , 
                                             self.scaling_factor,
                                             self.reshape_size , 
                                             self.data_map, 

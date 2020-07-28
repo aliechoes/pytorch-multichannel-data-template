@@ -1,65 +1,68 @@
 {
 
 	"model": {
-		"network": "resnet18",
+		"network": "squeezenet1_0",
 		"device": "cuda",
 		"checkpoint_path": null,
 		"args": {}
 	},
 	"loss": {
 		"loss_function": "CrossEntropyLoss", 
-		"weights": null
+		"weights": "frequency"
 	},
 	"optimizer": {
-		"optimization_method": "adam",
+		"optimization_method": "sgd",
 		"optimization_parameters": {
-			"lr": 1e-3,
-			"weight_decay": 0,
-			"amsgrad": true
+			"lr": 1e-3
 		}
 	},
 	"training": {
-		"num_epochs": 100,
+		"num_epochs": 1000,
 		"device": "cuda",
-		"metrics_of_interest": ["accuracy", "f1_macro", "f1_weighted", "cross_entropy"],
+		"metrics_of_interest": ["accuracy", "f1_macro", "f1_weighted",  "f1_micro", "cross_entropy", "top_3_accuracy",
+								"top_2_accuracy", "recall_macro", "recall_weighted",  "recall_micro",
+								"cohen_kappa_score", "precision_macro", "precision_weighted",  "precision_micro"	],
 		"call_back": {
-			"patience": 90,
+			"patience": 31,
 			"saving_period": 100,
 			"criteria": "f1_macro"
 		},
-		"verbosity": 2,
+		"verbosity": 1,
 		"lr_scheduler": {
-			"type": "StepLR",
+			"type": "ReduceLROnPlateau",
 			"args": {
-				"step_size": 20,
-				"gamma": 0.1
+				"mode": "max",
+				"patience": 15,
+				"factor": 0.2
 			}
 		}
 
 	},
 	"data_loader": {
-		"data_dir": "/pstore/data/DS4/synapse_formation/Experiment_12_labeled_data_processed_merged/",
-		"batch_size": 1024,
+		"data_dir": [ "/pstore/data/DS4/synapse_formation/Experiment_12_labeled_data_merged"],
+		"batch_size": 256,
 		"dynamic_range": {
-				"lower_bound":0.01,
-				"upper_bound":0.9999
+				"lower_bound":0.05,
+				"upper_bound":0.99999
 		},
 		"data_map": ["map_zero_one","normalize"],
 		"validation_split": 0.25,
-		"test_data_dir": "/pstore/data/DS4/synapse_formation/Experiment_14_labeled_data_processed_merged",
-		"augmentation": ["random_crop", "random_flip", "random_rotation"],
+		"test_data_dir": [],
+		"augmentation": [ "random_crop", "random_flip", "affine_transformation" , "random_gaussian_noise", "random_erasing"],
 		"scaling_factor": 4095,
 		"num_workers": 24
 
 	},
 	"tensorboard": {
-		"tensorboard_path": "/pstore/home/shetabs1/runs/synapse",
+		"tensorboard_path": "/pstore/home/shetabs1/runs/synapse_classification_test",
 		"add_metrics": true,
 		"add_images": true,
 		"add_confusion_matrix": true,
 		"add_graph": false,
-		"add_pr_curve": false,
+		"add_pr_curve": true,
 		"add_hparams": false,
-		"add_embedding": false
+		"add_embedding_without_images": false,
+		"add_embedding_with_images": false,
+		"add_grad_cam": false
 	}
 }
