@@ -143,3 +143,5 @@ launch_code.sh
 configs/sample_config.json
 
 *.sh
+eval.sh
+launch_eval.sh

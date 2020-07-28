@@ -77,7 +77,7 @@ DATETIME_NOW + _ + MODEL + OPTIMIZATION_METHOD + _ + LR
 - [x] add documentation on the code
 - [x] update the dataloader to be able to get different file formats
 - [x] add options for augmentation from the config file
-- [ ] add GRAD-CAM (decided to postpone it)
+- [x] add GRAD-CAM
 - [x] add steps for data_map
 - [x] add tensorboard 
 - [x] add config tracker in tensorboard
