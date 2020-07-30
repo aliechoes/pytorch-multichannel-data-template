@@ -236,6 +236,8 @@ def train(  model,
                         (metric_dataframe["metric"] == criteria )
             validation_criteria = metric_dataframe.loc[indx, "value"]
             if early_stopping(validation_criteria, patience):
+                logging.info("Validation criteria %s has not improved for %d epochs" % (criteria,patience ))
+                logging.info("The best %s is %.4f" % (criteria, best_criteria_value ))
                 logging.info("The training has stopped as the early stopping is triggered")
                 break
         

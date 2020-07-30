@@ -100,12 +100,17 @@ def train_validation_test_split(df, validation_size= 0.2 , randomize = False):
     This functions gets the dataframe and creates train, validation and test 
     split. it adds a new column: "set"
     """
-    _, X_validation = train_test_split( df.loc[df["set"]=="train" , "set"], 
-                                            stratify = df.loc[df["set"]=="train" , "set"], 
-                                            test_size=validation_size, 
-                                            random_state=314)
+    assert validation_size <= 1.
+    assert validation_size >= 0.
 
-    df.loc[X_validation.index,"set"] = "validation"
+    if validation_size == 1.0:
+        df.loc[ df["set"]=="train" ,"set"] = "validation"
+    elif validation_size > 0.:
+        _, X_validation = train_test_split( df.loc[df["set"]=="train" , "set"], 
+                                                stratify = df.loc[df["set"]=="train" , "set"], 
+                                                test_size=validation_size, 
+                                                random_state=314)
+        df.loc[X_validation.index,"set"] = "validation"
     return df
 
 def map_mean_std(mean, std, a , b):
@@ -131,7 +136,11 @@ class DataLoaderGenerator():
         self.scaling_factor = data_configs["scaling_factor"]
         self.num_workers = data_configs["num_workers"]
         self.dynamic_range = data_configs["dynamic_range"]
-        
+        self.classes = finding_classes(self.data_dir[0] )
+        self.existing_channels = finding_channels(  self.classes, 
+                                                    self.data_dir[0])
+        logging.info("Existing Channels: {}".format(self.existing_channels))
+    
     def data_frame_creator(self):
         """
         datafame including every file, which later will be used for reading the images.
@@ -144,11 +153,6 @@ class DataLoaderGenerator():
         .               .       .           .           .
         .               .       .           .           .
         """
-        self.classes = finding_classes(self.data_dir[0] )
-        self.existing_channels = finding_channels(  self.classes, 
-                                                    self.data_dir[0])
-        logging.info("Existing Channels: {}".format(self.existing_channels))
-
         self.df = input_dataframe_generator(self.data_dir, 
                                             self.test_data_dir ,
                                             self.classes,

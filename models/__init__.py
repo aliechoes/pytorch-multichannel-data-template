@@ -142,7 +142,7 @@ def get_model(ml_config,device, checkpoint ,num_channels ,num_classes ):
         model = load_checkpoint(model, device, checkpoint)
         model.image_size = 224
         model.intuition_layer = "features"
-        model.embedding_generator = "nn.Sequential(model.features), \
+        model.embedding_generator = "nn.Sequential(model.features, \
                                                     nn.Flatten())"
     
     if model_name == "squeezenet1_0":
@@ -155,7 +155,7 @@ def get_model(ml_config,device, checkpoint ,num_channels ,num_classes ):
         model.num_classes = num_classes
         model.image_size = 180
         model.intuition_layer = "features"
-        model.embedding_generator = "nn.Sequential(model.features), \
+        model.embedding_generator = "nn.Sequential(model.features, \
                                                     nn.Flatten())"
 
     if model_name == "deepflow":
