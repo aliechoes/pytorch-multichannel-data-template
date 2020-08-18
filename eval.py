@@ -13,8 +13,6 @@ import pandas as pd
 def get_checkpoint(file_path):
     if file_path is not None:
         checkpoint = torch.load(file_path)
-        checkpoint["classes"] = ['Doublet_with_interaction', 'Doublet_with_no_interaction', 'Doublet_with_no_interaction_functional', 'Multiplet', 'SingleBcell', 'SingleTcell', 'SingleTcell_Functional'] 
-        checkpoint["channels"] = ['Ch1', 'Ch2', 'Ch3', 'Ch4', 'Ch6', 'Ch7']
     else:
         checkpoint = None
     return checkpoint
@@ -31,6 +29,15 @@ def elapsed_time_print(start_time, message, epoch):
     logging.info(10*"---")
     return None
 
+def make_model_sequential(model, device):
+    embedding_generator = model.embedding_generator
+    image_size = model.image_size 
+    model = model.module 
+    model = model.to(device)
+    model.image_size  =  image_size 
+    model.embedding_generator = embedding_generator 
+    return model, eval(model.embedding_generator)
+
 def predict(configs):
     
     device = configs["model"]["device"]
@@ -44,9 +51,8 @@ def predict(configs):
     
     data_loader = DataLoaderGenerator(data_loader_configs)
     data_loader.existing_channels = checkpoint["channels"] 
-
     data_loader.data_frame_creator()
-    
+
     logging.info(data_loader.df)
 
     
@@ -61,11 +67,27 @@ def predict(configs):
                         number_of_channels ,
                         number_of_classes)
 
-    data_loader.data_loader(model.image_size, checkpoint)
     
-    uncertainty_samples = 100
+    model_feature_extraction = get_model(  model_configs,
+                        device,
+                        None,
+                        number_of_channels ,
+                        number_of_classes)
+    model_feature_extraction.load_state_dict( model .state_dict() )
+
+    _, feature_extractor = make_model_sequential(model_feature_extraction, device)
+    embedding_dimension = feature_extractor(torch.rand(5,   number_of_channels, 
+                                                            model.image_size, 
+                                                            model.image_size).to(device).float() ).shape[1]
+
+    data_loader.data_loader(model.image_size, checkpoint)
+    logging.info(data_loader.df)
+    uncertainty_samples = 30
     for j in range(uncertainty_samples):
-        data_loader.df["prediction_" + str(j)] = -1
+        data_loader.validation_dataset.df["prediction_" + str(j)] = -1
+
+    for j in range(embedding_dimension):
+        data_loader.validation_dataset.df["X" + str(j)] = -1
     # the evaluation phase
  
     logging.info("starting the evaluation")
@@ -76,7 +98,7 @@ def predict(configs):
             model.eval()
             # finding the file in the dataframe
             idx = data["idx"].cpu().numpy()   
-            percentage = percentage + len(idx) / data_loader.df.shape[0]
+            percentage = percentage + len(idx) / data_loader.validation_dataset.df.shape[0]
             logging.info("Completion Percentage %.2f" % percentage)
             inputs, labels = data["image"], data["label"]
             inputs, labels = inputs.to(device) , labels.to(device)
@@ -89,27 +111,33 @@ def predict(configs):
             outputs_probability = F.softmax(outputs).cpu().numpy()  
             _, predicted = torch.max(outputs.data, 1) 
 
-            data_loader.df.loc[idx,"prediction"] = predicted.cpu().numpy() 
-
+            data_loader.validation_dataset.df.loc[idx,"prediction"] = predicted.cpu().numpy() 
+            
             logging.info("probabilities")
             for k, cl in enumerate(checkpoint["classes"],0):
-                data_loader.df.loc[idx,cl + "_probability"] = outputs_probability[:,k]
+                data_loader.validation_dataset.df.loc[idx,cl + "_probability"] = outputs_probability[:,k]
+           
+            embedding_output = feature_extractor(inputs)
 
+            logging.info("embeddings")
+            for k in range(embedding_dimension):
+                data_loader.validation_dataset.df.loc[idx,"X" + str(k)] = embedding_output[:,k].cpu().numpy() 
+            
             logging.info("starting the uncertainty calculation")
             model.train()
             logging.info("model.train is on")
             for j in range(uncertainty_samples):
                 outputs = model(inputs)  
                 _, predicted = torch.max(outputs.data, 1)    
-                data_loader.df.loc[idx, "prediction_" + str(j)] = predicted.cpu().numpy()
+                data_loader.validation_dataset.df.loc[idx, "prediction_" + str(j)] = predicted.cpu().numpy()
                 
         
-        mode = data_loader.df.loc[:, [("prediction_" + str(j)) for j in range(100) ] ].mode(axis = 1)[0]
-        for i in range(0,data_loader.df.shape[0]):
-            data_loader.df.loc[i,"uncertainty"] = 1. - ((data_loader.df.loc[i, [("prediction_" + str(j)) for j in range(100) ] ] == mode[i]).sum())/100.
+        mode = data_loader.validation_dataset.df.loc[:, [("prediction_" + str(j)) for j in range(100) ] ].mode(axis = 1)[0]
+        for i in range(0,data_loader.validation_dataset.df.shape[0]):
+            data_loader.validation_dataset.df.loc[i,"uncertainty"] = 1. - ((data_loader.validation_dataset.df.loc[i, [("prediction_" + str(j)) for j in range(100) ] ] == mode[i]).sum())/100.
         # 
         # save the label of all images and their predictions
-        data_loader.df.to_csv(os.path.join(output_folder,
+        data_loader.validation_dataset.df.to_csv(os.path.join(output_folder,
                                         "granular_results.csv"), index = False)
 
 
