@@ -7,6 +7,7 @@ import torch.nn.init as init
 from models.lenet import LeNet
 from models.deepflow import DeepFlow
 from models.weight_initialization import weight_init
+from torchvision.models.resnet import ResNet, BasicBlock
 import logging
 
 def model_info(model):
@@ -64,7 +65,18 @@ def get_model(ml_config,device, checkpoint ,num_channels ,num_classes ):
                                                     model.classifier[:-1], \
                                                     nn.Flatten())"
 
-    ## TODO: add grad-cam
+    if model_name == "resnet9":
+        model = ResNet(BasicBlock, [1, 1, 1, 1]) 
+        if num_channels != 3:
+            model.conv1 = nn.Conv2d(num_channels, 64, kernel_size=(7, 7), 
+                            stride=(2, 2), padding=(3, 3), bias=False)
+        num_ftrs = model.fc.in_features
+        model.fc = nn.Linear(num_ftrs, num_classes)
+        model = load_checkpoint(model, device, checkpoint)
+        model.image_size = 224
+        model.intuition_layer = "features"
+        model.embedding_generator = "nn.Sequential(*list(model.children())[:-1], \
+                                                    nn.Flatten())"
     if model_name == "resnet18":
         model = torchvision.models.resnet18(pretrained=True)
         ## loading the imagenet weights in case it is possible
@@ -130,6 +142,7 @@ def get_model(ml_config,device, checkpoint ,num_channels ,num_classes ):
         model.embedding_generator = "nn.Sequential( model.features, \
                                                     model.classifier[:-1], \
                                                     nn.Flatten())"
+
     ## TODO: add grad-cam
     if model_name == "densenet121":
         model = torchvision.models.densenet121(pretrained=True, drop_rate = 0.5)
